@@ -21,7 +21,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Approve dependabot for non-major updates only
-        if: steps.dependabot-metadata.outputs.dependabot == 'true' && steps.dependabot-metadata.outputs.update-type != 'version-update:semver-major'
+        if: steps.dependabot-metadata.outputs.update-type != 'version-update:semver-major'
         run: |
           gh pr checkout "$PR_URL"
           if [ "$(gh pr status --json reviewDecision -q .currentBranch.reviewDecision)" != "APPROVED" ];

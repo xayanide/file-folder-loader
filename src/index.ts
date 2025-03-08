@@ -59,8 +59,8 @@ async function getFolders(dirPath: PathLike) {
     }
 }
 
-function getAsyncAwareLoadFolder(dirPath: string, isCallbackAsync: boolean, callback: LoadFoldersCallback) {
-    if (isCallbackAsync) {
+function getAsyncAwareLoadFolder(dirPath: string, isLoadCallbackAsync: boolean, callback: LoadFoldersCallback) {
+    if (isLoadCallbackAsync) {
         async function loadFolderAsync(folderName: string) {
             await callback(folderName, nodePath.join(dirPath, folderName));
         }
@@ -82,11 +82,11 @@ async function loadFolders(folders: string[], dirPath: string, loadCallback: Loa
     if (!processMode || !DEFAULT_IMPORT_MODES.includes(processMode)) {
         throw new Error(`Invalid process mode: ${processMode}. Must be a non-empty string.`);
     }
-    const isCallbackAsync = isAsyncFunction(loadCallback);
-    if (processMode === "parallel" && !isCallbackAsync) {
+    const isLoadCallbackAsync = isAsyncFunction(loadCallback);
+    if (processMode === "parallel" && !isLoadCallbackAsync) {
         throw new Error("Process mode: parallel requires an asynchronous load callback.");
     }
-    return await processItems(folders, processMode, getAsyncAwareLoadFolder(dirPath, isCallbackAsync, loadCallback));
+    return await processItems(folders, processMode, getAsyncAwareLoadFolder(dirPath, isLoadCallbackAsync, loadCallback));
 }
 
 async function getModules(
@@ -159,15 +159,15 @@ async function loadModules(modules: string[], dirPath: string, loadCallback: Loa
     if (!preferredExportName || typeof preferredExportName !== "string") {
         throw new Error(`Invalid preferred export name: ${preferredExportName}. Must be a non-empty string.`);
     }
-    const isCallbackAsync = isAsyncFunction(loadCallback);
-    if (processMode === "parallel" && !isCallbackAsync) {
+    const isLoadCallbackAsync = isAsyncFunction(loadCallback);
+    if (processMode === "parallel" && !isLoadCallbackAsync) {
         throw new Error("Import mode: parallel requires an asynchronous load callback.");
     }
     async function loadModule(fileName: string) {
         const fileUrlHref = nodeUrl.pathToFileURL(nodePath.join(dirPath, fileName)).href;
         const moduleExports = await importModule(fileUrlHref, exportType, preferredExportName);
         for (const moduleExport of moduleExports) {
-            if (isCallbackAsync) {
+            if (isLoadCallbackAsync) {
                 await loadCallback(moduleExport, fileUrlHref, fileName);
                 continue;
             }
