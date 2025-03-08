@@ -1,0 +1,46 @@
+# https://semantic-release.gitbook.io/semantic-release/recipes/ci-configurations/github-actions
+name: Releaser
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+permissions:
+  # for checkout
+  contents: read
+
+jobs:
+  release:
+    name: Bump version and release if needed
+    runs-on: ubuntu-latest
+    permissions:
+      # to be able to publish a GitHub release
+      contents: write
+      # to be able to comment on released issues
+      issues: write
+      # to be able to comment on released pull requests
+      pull-requests: write
+      # to enable use of OIDC for npm provenance
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # Test: https://github.com/semantic-release/semantic-release/discussions/2557
+          persist-credentials: false
+      - name: Setup Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+      - name: Clean install NPM dependencies
+        # npm ci (clean-install) removes the existing node_modules directory
+        run: npm ci
+      - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
+        run: npm audit signatures
+      - name: Bump version and release if needed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release

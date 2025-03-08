@@ -1,0 +1,40 @@
+name: BranchSyncer
+on:
+  workflow_run:
+    workflows:
+      - Releaser
+    types:
+      - completed
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+env:
+  SOURCE_BRANCH: main
+  TARGET_BRANCH: dev
+
+jobs:
+  sync-branch:
+    name: Sync branch source into target
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SRGH_TOKEN }}
+      - name: Configure git user
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Sync branch source into target
+        run: |
+          set -e
+          git fetch origin ${{ env.SOURCE_BRANCH }} ${{ env.TARGET_BRANCH }}
+          git checkout ${{ env.TARGET_BRANCH }}
+          git fetch origin ${{ env.TARGET_BRANCH }}
+          git merge origin/${{ env.SOURCE_BRANCH }} || (echo "Merge conflict detected" && exit 1)
+          git push origin ${{ env.TARGET_BRANCH }}

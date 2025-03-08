@@ -1,0 +1,89 @@
+{
+  "name": "file-folder-loader",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [
+    "iteration",
+    "file",
+    "folder",
+    "loader",
+    "utility"
+  ],
+  "homepage": "https://github.com/xayanide/file-folder-loader",
+  "bugs": {
+    "url": "https://github.com/xayanide/file-folder-loader/issues"
+  },
+  "repository": {
+    "url": "git+https://github.com/xayanide/file-folder-loader.git"
+  },
+  "funding": [
+    {
+      "type": "paypal",
+      "url": "https://www.paypal.com/paypalme/xayanide"
+    },
+    {
+      "type": "ko-fi",
+      "url": "https://ko-fi.com/xayanide"
+    },
+    {
+      "type": "buymeacoffee",
+      "url": "https://buymeacoffee.com/xayanide"
+    },
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/xayanide"
+    },
+    {
+      "type": "patreon",
+      "url": "https://patreon.com/xayanide"
+    }
+  ],
+  "license": "GPL-3.0-only",
+  "author": {
+    "name": "xayanide"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "./dist"
+  ],
+  "scripts": {
+    "build": "npm run clean && npm run build:base",
+    "build:base": "tsc",
+    "build:watch": "npm run build:base -- --watch",
+    "clean": "rimraf dist",
+    "dev": "npm run build:base && npm run start",
+    "format:base": "cross-env NODE_OPTIONS=\"--experimental-strip-types\" prettier .",
+    "format:check": "npm run format:base -- --check",
+    "format:write": "npm run format:base -- --write",
+    "lint": "eslint .",
+    "lint:fix": "npm run lint -- --fix",
+    "start": "node dist/index.js",
+    "test": "npm run test:base",
+    "test:base": "cross-env NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" module",
+    "test:coverage": "npm run test:base -- --coverage",
+    "test:watch": "npm run test:base -- --watch"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "@semantic-release/git": "^10.0.1",
+    "@stylistic/eslint-plugin": "^4.2.0",
+    "@tsconfig/strictest": "^2.0.5",
+    "@types/node": "^22.13.9",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.21.0",
+    "eslint-config-prettier": "^10.0.2",
+    "globals": "^16.0.0",
+    "prettier": "3.5.3",
+    "rimraf": "^6.0.1",
+    "semantic-release": "^24.2.3",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.26.0"
+  }
+}

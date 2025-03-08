@@ -1,0 +1,44 @@
+name: Linters
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  lint-commit:
+    permissions: write-all
+    name: Lint commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Lint commit
+        uses: wagoid/commitlint-github-action@v6
+        with:
+          configFile: "./commitlint.config.mjs"
+  lint-code:
+    name: Lint code
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+      - name: Clean install NPM dependencies
+        run: npm ci
+      - name: Lint code
+        uses: reviewdog/action-eslint@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-check

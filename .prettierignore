@@ -1,0 +1,19 @@
+# Ignore everything recursively
+*
+
+# But not these files
+!*.js
+!*.mjs
+!*.cjs
+!*.ts
+!*.cts
+!*.mts
+
+# Check subdirectories too
+!*/
+
+# Others
+**/node_modules
+**/.git
+**/logs
+**/sandbox
