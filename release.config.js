@@ -9,7 +9,7 @@ export default {
         ["@semantic-release/release-notes-generator"],
         // { npmPublish } is disabled by default only if the "private" property
         // in package.json is true.
-        ["@semantic-release/npm", { npmPublish: true }],
+        ["@semantic-release/npm", { npmPublish: false }],
         ["@semantic-release/github"],
         [
             "@semantic-release/git",
