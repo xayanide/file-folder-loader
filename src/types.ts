@@ -17,6 +17,8 @@ type ProcessMode = "sequential" | "parallel";
 
 type ExportType = "default" | "named";
 
+type NamedExports = string | "default" | "*";
+
 interface LoadFolderOptions {
     processMode?: ProcessMode;
 }
@@ -24,7 +26,7 @@ interface LoadFolderOptions {
 interface LoadModuleOptions {
     processMode?: ProcessMode;
     exportType?: ExportType;
-    preferredExportName: string;
+    preferredExportName: NamedExports;
 }
 
 export type { ExportType, ProcessMode, LoadFolderOptions, LoadFoldersCallback, LoadModuleOptions, LoadModulesCallback, ModuleExport, ModuleNamespace, ProcessItem };
