@@ -101,6 +101,12 @@ function getAsyncAwareLoadFolder(dirPath: string, isLoadCallbackAsync: boolean, 
 }
 
 async function loadFolders(folders: string[], dirPath: string, loadCallback: LoadFoldersCallback, options?: LoadFolderOptions) {
+    if (!Array.isArray(folders)) {
+        throw new Error(`Invalid folders: ${folders}. Must be a string array.`);
+    }
+    if (typeof dirPath !== "string") {
+        throw new Error(`Invalid directory path: ${dirPath}. Must be a non-empty string.`);
+    }
     if (typeof loadCallback !== "function") {
         throw new Error(`Invalid load callback: ${loadCallback}. Must be a function.`);
     }
@@ -183,6 +189,12 @@ async function importModule(fileUrlHref: string, exportType: string, preferredEx
 }
 
 async function loadModules(modules: string[], dirPath: string, loadCallback: LoadModulesCallback, options?: LoadModuleOptions) {
+    if (!Array.isArray(modules)) {
+        throw new Error(`Invalid modules: ${modules}. Must be a string array.`);
+    }
+    if (typeof dirPath !== "string") {
+        throw new Error(`Invalid directory path: ${dirPath}. Must be a non-empty string.`);
+    }
     if (typeof loadCallback !== "function") {
         throw new Error(`Invalid load callback: ${loadCallback}. Must be a function.`);
     }
