@@ -26,7 +26,8 @@ interface LoadFolderOptions {
 interface LoadModuleOptions {
     processMode?: ProcessMode;
     exportType?: ExportType;
-    preferredExportName: NamedExports;
+    preferredExportName?: NamedExports;
+    isImportEnabled?: boolean;
 }
 
 export type { ExportType, ProcessMode, LoadFolderOptions, LoadFoldersCallback, LoadModuleOptions, LoadModulesCallback, ModuleExport, ModuleNamespace, ProcessItem };

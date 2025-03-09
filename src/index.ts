@@ -23,6 +23,7 @@ const DEFAULT_LOAD_MODULE_OPTIONS = {
     processMode: DEFAULT_MODULE_PROCESS_MODE,
     exportType: DEFAULT_EXPORT_TYPE,
     preferredExportName: DEFAULT_NAMED_EXPORT,
+    isImportEnabled: true,
 };
 
 /**
@@ -85,15 +86,15 @@ async function getFolders(dirPath: PathLike, isRecursive = false) {
     }
 }
 
-function getAsyncAwareLoadFolder(dirPath: string, isLoadCallbackAsync: boolean, callback: LoadFoldersCallback) {
+function getAsyncAwareLoadFolder(dirPath: string, isLoadCallbackAsync: boolean, loadCallback: LoadFoldersCallback) {
     if (isLoadCallbackAsync) {
         async function loadFolderAsync(folderName: string) {
-            await callback(folderName, nodePath.join(dirPath, folderName));
+            await loadCallback(folderName, nodePath.join(dirPath, folderName));
         }
         return loadFolderAsync;
     } else {
         function loadFolderSync(folderName: string) {
-            callback(folderName, nodePath.join(dirPath, folderName));
+            loadCallback(folderName, nodePath.join(dirPath, folderName));
         }
         return loadFolderSync;
     }
@@ -117,10 +118,10 @@ async function loadFolders(folders: string[], dirPath: string, loadCallback: Loa
 
 async function getModules(
     dirPath: string,
+    isRecurive = false,
     filterCallback = function (fileName: string) {
         return fileName.endsWith(".js") || fileName.endsWith(".ts") || fileName.endsWith(".cjs") || fileName.endsWith(".mjs");
     },
-    isRecurive = false,
 ) {
     try {
         const entries = await nodeFsPromises.readdir(dirPath, { withFileTypes: true });
@@ -136,7 +137,7 @@ async function getModules(
                 if (!entry.isDirectory()) {
                     continue;
                 }
-                const subDirFiles = await getModules(nodePath.join(dirPath, entry.name), filterCallback, true);
+                const subDirFiles = await getModules(nodePath.join(dirPath, entry.name), true, filterCallback);
                 filteredFileNames = filteredFileNames.concat(
                     subDirFiles.map(function (file) {
                         return nodePath.join(entry.name, file);
@@ -189,6 +190,7 @@ async function loadModules(modules: string[], dirPath: string, loadCallback: Loa
     const processMode = loadOptions.processMode;
     const exportType = loadOptions.exportType;
     const preferredExportName = loadOptions.preferredExportName;
+    const isImportEnabled = loadOptions.isImportEnabled;
     if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
         throw new Error(`Invalid process mode: ${processMode}. Must be a non-empty string.`);
     }
@@ -198,12 +200,23 @@ async function loadModules(modules: string[], dirPath: string, loadCallback: Loa
     if (!preferredExportName || typeof preferredExportName !== "string") {
         throw new Error(`Invalid preferred export name: ${preferredExportName}. Must be a non-empty string.`);
     }
+    if (typeof isImportEnabled !== "boolean") {
+        throw new Error(`Invalid isImportEnabled: ${isImportEnabled}. Must be a boolean.`);
+    }
     const isLoadCallbackAsync = isAsyncFunction(loadCallback);
     if (processMode === "concurrent" && !isLoadCallbackAsync) {
         throw new Error("Invalid load callback. Process mode: concurrent requires an asynchronous load callback.");
     }
     async function loadModule(fileName: string) {
         const fileUrlHref = nodeUrl.pathToFileURL(nodePath.join(dirPath, fileName)).href;
+        if (isImportEnabled) {
+            if (isLoadCallbackAsync) {
+                await loadCallback(null, fileUrlHref, fileName);
+                return;
+            }
+            loadCallback(null, fileUrlHref, fileName);
+            return;
+        }
         const moduleExports = await importModule(fileUrlHref, exportType, preferredExportName);
         for (const moduleExport of moduleExports) {
             if (isLoadCallbackAsync) {
