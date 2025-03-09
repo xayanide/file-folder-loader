@@ -61,10 +61,10 @@ async function processItems(items: string[], processMode: string, loadItem: Proc
 async function getFolders(dirPath: PathLike, isRecursive = false) {
     try {
         const entries = await nodeFsPromises.readdir(dirPath, { withFileTypes: true });
-        const directories = entries.filter((entry) => {
+        const directories = entries.filter(function (entry) {
             return entry.isDirectory();
         });
-        const folderNames = directories.map((directory) => {
+        const folderNames = directories.map(function (directory) {
             return directory.name;
         });
         if (isRecursive) {
@@ -72,7 +72,7 @@ async function getFolders(dirPath: PathLike, isRecursive = false) {
                 const subDirPath = `${dirPath}/${directory.name}`;
                 const subFolders = await getFolders(subDirPath, true);
                 folderNames.push(
-                    ...subFolders.map((subFolder) => {
+                    ...subFolders.map(function (subFolder) {
                         return `${directory.name}/${subFolder}`;
                     }),
                 );
@@ -117,17 +117,17 @@ async function loadFolders(folders: string[], dirPath: string, loadCallback: Loa
 
 async function getModules(
     dirPath: string,
-    filterCallback = (fileName: string) => {
+    filterCallback = function (fileName: string) {
         return fileName.endsWith(".js") || fileName.endsWith(".ts") || fileName.endsWith(".cjs") || fileName.endsWith(".mjs");
     },
     isRecurive = false,
 ) {
     try {
         const entries = await nodeFsPromises.readdir(dirPath, { withFileTypes: true });
-        const files = entries.filter((entry) => {
+        const files = entries.filter(function (entry) {
             return entry.isFile();
         });
-        const fileNames = files.map((file) => {
+        const fileNames = files.map(function (file) {
             return file.name;
         });
         let filteredFileNames = fileNames.filter(filterCallback);
@@ -138,7 +138,7 @@ async function getModules(
                 }
                 const subDirFiles = await getModules(nodePath.join(dirPath, entry.name), filterCallback, true);
                 filteredFileNames = filteredFileNames.concat(
-                    subDirFiles.map((file) => {
+                    subDirFiles.map(function (file) {
                         return nodePath.join(entry.name, file);
                     }),
                 );
