@@ -25,6 +25,21 @@ const DEFAULT_LOAD_MODULE_OPTIONS = {
     preferredExportName: DEFAULT_NAMED_EXPORT,
 };
 
+/**
+ * Made a simple wrapper because TypeScript likes seeing errors from catch clauses as unknown. Well errors can be anything, true. -xaya
+ */
+function handleError(message: string, error: unknown, logError = console.error) {
+    if (error instanceof Error) {
+        logError(`${message}\n${error.message}${error.stack ? `\n${error.stack}` : ""}`);
+        return;
+    }
+    if (typeof error === "object" && error !== null) {
+        logError(`${message}\nUnknown Error Object:\n${JSON.stringify(error, null, 2)}`);
+        return;
+    }
+    logError(`${message}\nUnknown Error Type: ${typeof error}\n${String(error)}`);
+}
+
 function isAsyncFunction(fn: unknown) {
     return typeof fn === "function" && fn.constructor.name === "AsyncFunction";
 }
@@ -43,7 +58,7 @@ async function processItems(items: string[], processMode: string, loadItem: Proc
     }
 }
 
-async function getFolders(dirPath: PathLike) {
+async function getFolders(dirPath: PathLike, isRecursive = false) {
     try {
         const entries = await nodeFsPromises.readdir(dirPath, { withFileTypes: true });
         const directories = entries.filter((entry) => {
@@ -52,10 +67,21 @@ async function getFolders(dirPath: PathLike) {
         const folderNames = directories.map((directory) => {
             return directory.name;
         });
+        if (isRecursive) {
+            for (const directory of directories) {
+                const subDirPath = `${dirPath}/${directory.name}`;
+                const subFolders = await getFolders(subDirPath, true);
+                folderNames.push(
+                    ...subFolders.map((subFolder) => {
+                        return `${directory.name}/${subFolder}`;
+                    }),
+                );
+            }
+        }
         return folderNames;
     } catch (error) {
-        console.error(`Failed to get folders. Directory path: ${dirPath}:\n`, error);
-        return;
+        handleError(`Failed to get folders. Directory path: ${dirPath}`, error);
+        return [];
     }
 }
 
@@ -90,10 +116,11 @@ async function loadFolders(folders: string[], dirPath: string, loadCallback: Loa
 }
 
 async function getModules(
-    dirPath: PathLike,
-    filterCallback: (fileName: string) => boolean = (fileName) => {
+    dirPath: string,
+    filterCallback = (fileName: string) => {
         return fileName.endsWith(".js") || fileName.endsWith(".ts") || fileName.endsWith(".cjs") || fileName.endsWith(".mjs");
     },
+    isRecurive = false,
 ) {
     try {
         const entries = await nodeFsPromises.readdir(dirPath, { withFileTypes: true });
@@ -103,10 +130,23 @@ async function getModules(
         const fileNames = files.map((file) => {
             return file.name;
         });
-        return fileNames.filter(filterCallback);
+        let filteredFileNames = fileNames.filter(filterCallback);
+        if (isRecurive) {
+            for (const entry of entries) {
+                if (entry.isDirectory()) {
+                    const subDirFiles = await getModules(nodePath.join(dirPath, entry.name), filterCallback, true);
+                    filteredFileNames = filteredFileNames.concat(
+                        subDirFiles.map((file) => {
+                            return nodePath.join(entry.name, file);
+                        }),
+                    );
+                }
+            }
+        }
+        return filteredFileNames;
     } catch (error) {
-        console.error(`Failed to get modules. Directory path: ${dirPath}:\n`, error);
-        return;
+        handleError(`Failed to get modules. Directory path: ${dirPath}`, error);
+        return [];
     }
 }
 
