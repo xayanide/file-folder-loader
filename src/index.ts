@@ -85,15 +85,15 @@ async function getFolders(dirPath: PathLike, isRecursive = false) {
     }
 }
 
-function getAsyncAwareLoadFolder(dirPath: string, isLoadCallbackAsync: boolean, callback: LoadFoldersCallback) {
+function getAsyncAwareLoadFolder(dirPath: string, isLoadCallbackAsync: boolean, loadCallback: LoadFoldersCallback) {
     if (isLoadCallbackAsync) {
         async function loadFolderAsync(folderName: string) {
-            await callback(folderName, nodePath.join(dirPath, folderName));
+            await loadCallback(folderName, nodePath.join(dirPath, folderName));
         }
         return loadFolderAsync;
     } else {
         function loadFolderSync(folderName: string) {
-            callback(folderName, nodePath.join(dirPath, folderName));
+            loadCallback(folderName, nodePath.join(dirPath, folderName));
         }
         return loadFolderSync;
     }
