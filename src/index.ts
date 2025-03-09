@@ -133,14 +133,15 @@ async function getModules(
         let filteredFileNames = fileNames.filter(filterCallback);
         if (isRecurive) {
             for (const entry of entries) {
-                if (entry.isDirectory()) {
-                    const subDirFiles = await getModules(nodePath.join(dirPath, entry.name), filterCallback, true);
-                    filteredFileNames = filteredFileNames.concat(
-                        subDirFiles.map((file) => {
-                            return nodePath.join(entry.name, file);
-                        }),
-                    );
+                if (!entry.isDirectory()) {
+                    continue;
                 }
+                const subDirFiles = await getModules(nodePath.join(dirPath, entry.name), filterCallback, true);
+                filteredFileNames = filteredFileNames.concat(
+                    subDirFiles.map((file) => {
+                        return nodePath.join(entry.name, file);
+                    }),
+                );
             }
         }
         return filteredFileNames;
