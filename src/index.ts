@@ -159,9 +159,7 @@ async function importModule(fileUrlHref: string, exportType: string, preferredEx
         for (const exportName in moduleNamespace) {
             const moduleExport = moduleNamespace[exportName];
             if (!moduleExport || !Object.prototype.hasOwnProperty.call(moduleNamespace, exportName) || exportName === DEFAULT_EXPORT_NAME) {
-                console.error(
-                    `Invalid module. Must be a named export called '${preferredExportName}'. Unable to verify named export '${exportName}'. Module: ${fileUrlHref}`,
-                );
+                console.error(`Invalid module. Must be a named export. Unable to verify named export '${exportName}'. Module: ${fileUrlHref}`);
                 continue;
             }
             moduleExports.push(moduleExport);
