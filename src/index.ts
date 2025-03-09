@@ -104,7 +104,7 @@ async function loadFolders(folders: string[], dirPath: string, loadCallback: Loa
     if (!Array.isArray(folders)) {
         throw new Error(`Invalid folders: ${folders}. Must be a string array.`);
     }
-    if (typeof dirPath !== "string") {
+    if (typeof dirPath !== "string" || dirPath.trim() === "") {
         throw new Error(`Invalid directory path: ${dirPath}. Must be a non-empty string.`);
     }
     if (typeof loadCallback !== "function") {
@@ -112,7 +112,7 @@ async function loadFolders(folders: string[], dirPath: string, loadCallback: Loa
     }
     const loadOptions = { ...DEFAULT_LOAD_FOLDER_OPTIONS, ...options };
     const processMode = loadOptions.processMode;
-    if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
+    if (typeof processMode !== "string" || !DEFAULT_PROCESS_MODES.includes(processMode)) {
         throw new Error(`Invalid process mode: ${processMode}. Must be a non-empty string.`);
     }
     const isLoadCallbackAsync = isAsyncFunction(loadCallback);
@@ -192,7 +192,7 @@ async function loadModules(modules: string[], dirPath: string, loadCallback: Loa
     if (!Array.isArray(modules)) {
         throw new Error(`Invalid modules: ${modules}. Must be a string array.`);
     }
-    if (typeof dirPath !== "string") {
+    if (typeof dirPath !== "string" || dirPath.trim() === "") {
         throw new Error(`Invalid directory path: ${dirPath}. Must be a non-empty string.`);
     }
     if (typeof loadCallback !== "function") {
@@ -209,7 +209,7 @@ async function loadModules(modules: string[], dirPath: string, loadCallback: Loa
     if (!exportType || !DEFAULT_EXPORT_TYPES.includes(exportType)) {
         throw new Error(`Invalid exportType: ${exportType}. Must be a non-empty string.`);
     }
-    if (!preferredExportName || typeof preferredExportName !== "string") {
+    if (typeof preferredExportName !== "string" || preferredExportName.trim() === "") {
         throw new Error(`Invalid preferred export name: ${preferredExportName}. Must be a non-empty string.`);
     }
     if (typeof isImportEnabled !== "boolean") {

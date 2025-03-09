@@ -37,6 +37,8 @@ jobs:
       - name: Clean install NPM dependencies
         # npm ci (clean-install) removes the existing node_modules directory
         run: npm ci
+      - name: Build
+        run: npm run build
       - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
         run: npm audit signatures
       - name: Bump version and release if needed
