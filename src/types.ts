@@ -13,7 +13,7 @@ type LoadFoldersCallback = (folderName: string, folderPath: string) => unknown |
 
 type LoadModulesCallback = (moduleExport: unknown, modulePath: string, moduleFileName: string) => unknown | Promise<unknown>;
 
-type ProcessMode = "sequential" | "parallel";
+type ProcessMode = "sequential" | "concurrent";
 
 type ExportType = "default" | "named";
 

@@ -6,13 +6,13 @@ import type { LoadFolderOptions, LoadFoldersCallback, LoadModuleOptions, LoadMod
 
 const DEFAULT_EXPORT_NAME = "default";
 
-const DEFAULT_FOLDER_PROCESS_MODE = "parallel";
-const DEFAULT_MODULE_PROCESS_MODE = "parallel";
+const DEFAULT_FOLDER_PROCESS_MODE = "concurrent";
+const DEFAULT_MODULE_PROCESS_MODE = "concurrent";
 
 const DEFAULT_EXPORT_TYPE = "default";
 const DEFAULT_NAMED_EXPORT = "default";
 
-const DEFAULT_IMPORT_MODES = ["sequential", "parallel"];
+const DEFAULT_IMPORT_MODES = ["sequential", "concurrent"];
 const DEFAULT_EXPORT_TYPES = ["default", "named"];
 
 const DEFAULT_LOAD_FOLDER_OPTIONS = {
@@ -45,7 +45,7 @@ function isAsyncFunction(fn: unknown) {
 }
 
 async function processItems(items: string[], processMode: string, loadItem: ProcessItem) {
-    if (processMode === "parallel") {
+    if (processMode === "concurrent") {
         await Promise.all(items.map(loadItem));
     } else {
         for (const itemPath of items) {
@@ -109,8 +109,8 @@ async function loadFolders(folders: string[], dirPath: string, loadCallback: Loa
         throw new Error(`Invalid process mode: ${processMode}. Must be a non-empty string.`);
     }
     const isLoadCallbackAsync = isAsyncFunction(loadCallback);
-    if (processMode === "parallel" && !isLoadCallbackAsync) {
-        throw new Error("Process mode: parallel requires an asynchronous load callback.");
+    if (processMode === "concurrent" && !isLoadCallbackAsync) {
+        throw new Error("Invalid load callback. Process mode: concurrent requires an asynchronous load callback.");
     }
     return await processItems(folders, processMode, getAsyncAwareLoadFolder(dirPath, isLoadCallbackAsync, loadCallback));
 }
@@ -199,8 +199,8 @@ async function loadModules(modules: string[], dirPath: string, loadCallback: Loa
         throw new Error(`Invalid preferred export name: ${preferredExportName}. Must be a non-empty string.`);
     }
     const isLoadCallbackAsync = isAsyncFunction(loadCallback);
-    if (processMode === "parallel" && !isLoadCallbackAsync) {
-        throw new Error("Import mode: parallel requires an asynchronous load callback.");
+    if (processMode === "concurrent" && !isLoadCallbackAsync) {
+        throw new Error("Invalid load callback. Process mode: concurrent requires an asynchronous load callback.");
     }
     async function loadModule(fileName: string) {
         const fileUrlHref = nodeUrl.pathToFileURL(nodePath.join(dirPath, fileName)).href;
