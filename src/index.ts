@@ -209,7 +209,7 @@ async function loadModules(modules: string[], dirPath: string, loadCallback: Loa
     }
     async function loadModule(fileName: string) {
         const fileUrlHref = nodeUrl.pathToFileURL(nodePath.join(dirPath, fileName)).href;
-        if (isImportEnabled) {
+        if (!isImportEnabled) {
             if (isLoadCallbackAsync) {
                 await loadCallback(null, fileUrlHref, fileName);
                 return;
