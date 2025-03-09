@@ -17,7 +17,8 @@ import { getFolders, loadFolders } from "file-folder-loader";
 async function exampleLoadFolders() {
     const dirPath = "./some-directory";
     const folders = await getFolders(dirPath);
-    if (folders) {
+    // just to demo that it is a string array
+    if (folders.length > 0) {
         await loadFolders(folders, dirPath, (folderName, folderPath) => {
             console.log(`Loaded folder: ${folderName} at path: ${folderPath}`);
         });
@@ -35,7 +36,8 @@ import { getModules, loadModules } from "file-folder-loader";
 async function exampleLoadModules() {
     const dirPath = "./some-directory";
     const modules = await getModules(dirPath);
-    if (modules) {
+    // just to demo that it is a string array
+    if (modules.length > 0) {
         await loadModules(modules, dirPath, (moduleExport, modulePath, moduleFileName) => {
             console.log(`Loaded module: ${moduleFileName} from path: ${modulePath}`);
             console.log(`Module export:`, moduleExport);
@@ -54,11 +56,13 @@ import { getFolders, loadFolders, getModules, loadModules } from "file-folder-lo
 async function exampleLoadFoldersAndModules() {
     const dirPath = "./some-directory";
     const folders = await getFolders(dirPath);
-    if (folders) {
+    // just to demo that it is a string array
+    if (folders.length > 0) {
         await loadFolders(folders, dirPath, async (folderName, folderPath) => {
             console.log(`Loaded folder: ${folderName} at path: ${folderPath}`);
             const modules = await getModules(folderPath);
-            if (modules) {
+            // just to demo that it is a string array
+            if (modules.length > 0) {
                 await loadModules(modules, folderPath, (moduleExport, modulePath, moduleFileName) => {
                     console.log(`Loaded module: ${moduleFileName} from path: ${modulePath}`);
                     console.log(`Module export:`, moduleExport);
