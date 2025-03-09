@@ -117,10 +117,10 @@ async function loadFolders(folders: string[], dirPath: string, loadCallback: Loa
 
 async function getModules(
     dirPath: string,
+    isRecurive = false,
     filterCallback = function (fileName: string) {
         return fileName.endsWith(".js") || fileName.endsWith(".ts") || fileName.endsWith(".cjs") || fileName.endsWith(".mjs");
     },
-    isRecurive = false,
 ) {
     try {
         const entries = await nodeFsPromises.readdir(dirPath, { withFileTypes: true });
@@ -136,7 +136,7 @@ async function getModules(
                 if (!entry.isDirectory()) {
                     continue;
                 }
-                const subDirFiles = await getModules(nodePath.join(dirPath, entry.name), filterCallback, true);
+                const subDirFiles = await getModules(nodePath.join(dirPath, entry.name), true, filterCallback);
                 filteredFileNames = filteredFileNames.concat(
                     subDirFiles.map(function (file) {
                         return nodePath.join(entry.name, file);
