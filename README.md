@@ -1,5 +1,5 @@
 # file-folder-loader
-A simple utility for iterating over folders and files and importing modules from those files. Syntactic sugar for iterating and loading folders and files.
+A simple utility for iterating over folders and files and importing modules from those files. An abstraction over for-loops approach of loading files and folders. Syntactic sugar for iterating and loading folders and files.
 
 ## Installation
 
