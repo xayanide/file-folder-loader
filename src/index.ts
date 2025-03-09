@@ -23,6 +23,7 @@ const DEFAULT_LOAD_MODULE_OPTIONS = {
     processMode: DEFAULT_MODULE_PROCESS_MODE,
     exportType: DEFAULT_EXPORT_TYPE,
     preferredExportName: DEFAULT_NAMED_EXPORT,
+    isImportEnabled: true,
 };
 
 /**
@@ -189,6 +190,7 @@ async function loadModules(modules: string[], dirPath: string, loadCallback: Loa
     const processMode = loadOptions.processMode;
     const exportType = loadOptions.exportType;
     const preferredExportName = loadOptions.preferredExportName;
+    const isImportEnabled = loadOptions.isImportEnabled;
     if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
         throw new Error(`Invalid process mode: ${processMode}. Must be a non-empty string.`);
     }
@@ -198,12 +200,23 @@ async function loadModules(modules: string[], dirPath: string, loadCallback: Loa
     if (!preferredExportName || typeof preferredExportName !== "string") {
         throw new Error(`Invalid preferred export name: ${preferredExportName}. Must be a non-empty string.`);
     }
+    if (typeof isImportEnabled !== "boolean") {
+        throw new Error(`Invalid isImportEnabled: ${isImportEnabled}. Must be a boolean.`);
+    }
     const isLoadCallbackAsync = isAsyncFunction(loadCallback);
     if (processMode === "concurrent" && !isLoadCallbackAsync) {
         throw new Error("Invalid load callback. Process mode: concurrent requires an asynchronous load callback.");
     }
     async function loadModule(fileName: string) {
         const fileUrlHref = nodeUrl.pathToFileURL(nodePath.join(dirPath, fileName)).href;
+        if (isImportEnabled) {
+            if (isLoadCallbackAsync) {
+                await loadCallback(null, fileUrlHref, fileName);
+                return;
+            }
+            loadCallback(null, fileUrlHref, fileName);
+            return;
+        }
         const moduleExports = await importModule(fileUrlHref, exportType, preferredExportName);
         for (const moduleExport of moduleExports) {
             if (isLoadCallbackAsync) {
