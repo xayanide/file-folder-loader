@@ -3,6 +3,7 @@ import eslintPluginJs from "@eslint/js";
 import eslintConfigPrettier from "eslint-config-prettier";
 import stylisticEslintPlugin from "@stylistic/eslint-plugin";
 import tseslint from "typescript-eslint";
+import eslintPluginErasableSyntaxOnly from "eslint-plugin-erasable-syntax-only";
 
 const stylisticConfigPreferences = {
     formatting: {
@@ -100,8 +101,9 @@ export default [
             "no-shadow": "off",
         },
     },
-    /** Global config object with rules that overrides specific rules for Prettier to work well with ESLint */
+    /** Global config object with rules that may or may not override specific rules to work well with ESLint */
     eslintConfigPrettier,
+    eslintPluginErasableSyntaxOnly.configs.recommended,
     /**
      * Global config object with rules I don't want to be overriden no matter what rules are set above
      * https://github.com/prettier/eslint-config-prettier?tab=readme-ov-file#forbid-unnecessary-backticks
