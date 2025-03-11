@@ -202,8 +202,8 @@ async function importModule(fileUrlHref: string, exportType: string, preferredEx
     if (!moduleExport || !Object.prototype.hasOwnProperty.call(moduleNamespace, exportName)) {
         const errorMessage = isNamedExportType
             ? `Must be a named export called '${preferredExportName}'. ${exportName === DEFAULT_EXPORT_NAME ? "Unable to verify named export" : "Unable to verify preferred export name"} '${exportName}'.`
-            : `Must be a default export. Unable to verify default export '${exportName}'.`;
-        throw new Error(`Invalid module export. ${errorMessage} Module: ${fileUrlHref}`);
+            : `Must be a default export. Unable to verify default export '${exportName}'`;
+        throw new Error(`Invalid module export. ${errorMessage}. Module: ${fileUrlHref}`);
     }
     return [moduleExport];
 }
