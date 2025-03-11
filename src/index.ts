@@ -211,15 +211,15 @@ async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallb
     async function processPath(filePath: string) {
         const fileUrlHref = nodeUrl.pathToFileURL(filePath).href;
         const fileName = nodePath.basename(fileUrlHref);
-        if (!IMPORTABLE_MODULE_FILE_EXTENSIONS_PATTERN.test(fileName)) {
-            return;
-        }
         if (!isImportEnabled) {
             if (isLoadCallbackAsync) {
                 await loadCallback(null, fileUrlHref, fileName);
                 return;
             }
             loadCallback(null, fileUrlHref, fileName);
+            return;
+        }
+        if (!IMPORTABLE_MODULE_FILE_EXTENSIONS_PATTERN.test(fileName)) {
             return;
         }
         const moduleExports = await importModule(fileUrlHref, exportType, preferredExportName);
