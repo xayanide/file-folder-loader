@@ -15,7 +15,7 @@ type LoadModulesCallback = (moduleExport: unknown, moduleFileUrlHref: string, mo
 
 type ProcessMode = "sequential" | "concurrent";
 
-type ExportType = "default" | "named";
+type ExportType = "default" | "named" | "all";
 
 type NamedExports = string | "default" | "*";
 

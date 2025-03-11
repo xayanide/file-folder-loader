@@ -17,7 +17,7 @@ const DEFAULT_EXPORT_TYPE = "default";
 const DEFAULT_NAMED_EXPORT = "default";
 
 const DEFAULT_PROCESS_MODES = ["sequential", "concurrent"];
-const DEFAULT_EXPORT_TYPES = ["default", "named"];
+const DEFAULT_EXPORT_TYPES = ["default", "named", "all"];
 
 const DEFAULT_LOAD_FOLDER_OPTIONS = {
     processMode: DEFAULT_FOLDER_PROCESS_MODE,
@@ -134,12 +134,23 @@ function getAsyncAwareCallback(isLoadCallbackAsync: boolean, loadCallback: LoadF
 async function importModule(fileUrlHref: string, exportType: string, preferredExportName: string) {
     const isNamedExportType = exportType === "named";
     const moduleNamespace: ModuleNamespace = await import(fileUrlHref);
-    if (isNamedExportType && preferredExportName === "*") {
+    if (exportType === "all") {
+        const moduleExports: ModuleExport[] = [];
+        for (const exportName in moduleNamespace) {
+            const moduleExport = moduleNamespace[exportName];
+            if (!moduleExport || !Object.prototype.hasOwnProperty.call(moduleNamespace, exportName)) {
+                console.error(`Invalid module export. Must be a default or named export. Unable to verify export '${exportName}'. Module: ${fileUrlHref}`);
+                continue;
+            }
+            moduleExports.push(moduleExport);
+        }
+        return moduleExports;
+    } else if (isNamedExportType && preferredExportName === "*") {
         const moduleExports: ModuleExport[] = [];
         for (const exportName in moduleNamespace) {
             const moduleExport = moduleNamespace[exportName];
             if (!moduleExport || !Object.prototype.hasOwnProperty.call(moduleNamespace, exportName) || exportName === DEFAULT_EXPORT_NAME) {
-                console.error(`Invalid module. Must be a named export. Unable to verify named export '${exportName}'. Module: ${fileUrlHref}`);
+                console.error(`Invalid module export. Must be a named export. Unable to verify named export '${exportName}'. Module: ${fileUrlHref}`);
                 continue;
             }
             moduleExports.push(moduleExport);
@@ -151,10 +162,10 @@ async function importModule(fileUrlHref: string, exportType: string, preferredEx
         if (!moduleExport || !Object.prototype.hasOwnProperty.call(moduleNamespace, exportName)) {
             throw new Error(
                 isNamedExportType
-                    ? `Invalid module. Must be a named export called '${preferredExportName}'. ${
+                    ? `Invalid module export. Must be a named export called '${preferredExportName}'. ${
                           exportName === DEFAULT_EXPORT_NAME ? "Unable to verify named export" : "Unable to verify preferred export name"
                       } '${exportName}'. Module: ${fileUrlHref}`
-                    : `Invalid module. Must be a default export. Unable to verify default export '${exportName}'. Module: ${fileUrlHref}`,
+                    : `Invalid module export. Must be a default export. Unable to verify default export '${exportName}'. Module: ${fileUrlHref}`,
             );
         }
         return [moduleExport];
