@@ -68,44 +68,76 @@ async function processPaths(paths: string[], processMode: string, processPath: P
     }
 }
 
-/** Warning: Recursive can be tasking with nested directories. */
-async function getFolders(dirPath: string, isRecursive = false, processMode: ProcessMode = DEFAULT_FOLDER_PROCESS_MODE) {
+function validateGetArgs(dirPath: string, isRecursive: boolean, processMode: ProcessMode) {
+    if (typeof dirPath !== "string" || dirPath.trim() === "") {
+        throw new Error(`Invalid dirPath: '${dirPath}'. Must be a non-empty string.`);
+    }
     if (typeof isRecursive !== "boolean") {
         throw new Error(`Invalid isRecursive: '${isRecursive}'. Must be a boolean.`);
     }
     if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
         throw new Error(`Invalid process mode: '${processMode}'. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
     }
+}
+
+async function getDirectoryEntries(dirPath: string) {
     try {
-        const entries = await nodeFsPromises.readdir(dirPath, { withFileTypes: true });
-        const directories = entries.filter((entry) => {
-            return entry.isDirectory();
-        });
-        const directoryPaths = directories.map((entry) => {
-            return nodePath.join(dirPath, entry.name);
-        });
-        if (!isRecursive) {
-            return directoryPaths;
-        }
-        if (processMode === "sequential") {
-            const subDirPaths: string[] = [];
-            for (const entry of directories) {
-                const subDirPath = nodePath.join(dirPath, entry.name);
-                const subDirDirectory = await getFolders(subDirPath, true, processMode);
-                subDirPaths.push(...subDirDirectory);
-            }
-            return [...directoryPaths, ...subDirPaths];
-        }
-        const subDirPaths = await Promise.all(
-            directories.map(async function (entry): Promise<string[]> {
-                return await getFolders(nodePath.join(dirPath, entry.name), true);
-            }),
-        );
-        return [...directoryPaths, ...subDirPaths.flat()];
+        return await nodeFsPromises.readdir(dirPath, { withFileTypes: true });
     } catch (error) {
-        handleError(`Failed to get folders. Directory path: ${dirPath}`, error);
+        handleError(`Failed to read directory. Directory path: ${dirPath}`, error);
         return [];
     }
+}
+
+async function getPaths(
+    dirPath: string,
+    isRecursive: boolean,
+    processMode: ProcessMode,
+    reduceCallback: (acc: string[], entry: Dirent) => string[],
+    recursiveCallback: (subDirPath: string) => Promise<string[]>,
+) {
+    const entries = await getDirectoryEntries(dirPath);
+    const paths = entries.reduce<string[]>(reduceCallback, []);
+    if (!isRecursive) {
+        return paths;
+    }
+    const directories = entries.filter(function (entry) {
+        return entry.isDirectory();
+    });
+    /**
+     * paths.push(...results) is possible for a mutable approach
+     * but decided not to go with it to avoid side-effects.
+     */
+    if (processMode === "sequential") {
+        const results: string[] = [];
+        for (const entry of directories) {
+            const subDirPath = nodePath.join(dirPath, entry.name);
+            const subDirResults = await recursiveCallback(subDirPath);
+            results.push(...subDirResults);
+        }
+        return [...paths, ...results];
+    }
+    const subDirResults = await Promise.all(
+        directories.map(async function (entry) {
+            return await recursiveCallback(nodePath.join(dirPath, entry.name));
+        }),
+    );
+    return [...paths, ...subDirResults.flat()];
+}
+
+/** Warning: Recursive can be tasking with nested directories. */
+async function getFolders(dirPath: string, isRecursive = false, processMode: ProcessMode = DEFAULT_FOLDER_PROCESS_MODE) {
+    validateGetArgs(dirPath, isRecursive, processMode);
+    function reduceCallback(acc: string[], entry: Dirent) {
+        if (entry.isDirectory()) {
+            acc.push(nodePath.join(dirPath, entry.name));
+        }
+        return acc;
+    }
+    async function recursiveCallback(subDirPath: string): Promise<string[]> {
+        return await getFolders(subDirPath, true, processMode);
+    }
+    return await getPaths(dirPath, isRecursive, processMode, reduceCallback, recursiveCallback);
 }
 
 /** Warning: Recursive can be tasking for nested directories. */
@@ -113,46 +145,21 @@ async function getModules(
     dirPath: string,
     isRecursive = false,
     processMode: ProcessMode = DEFAULT_MODULE_PROCESS_MODE,
-    filterCallback = function (entry: Dirent) {
-        return entry.isFile() && MODULE_FILE_EXTENSIONS_PATTERN.test(entry.name);
+    reduceCallback = function (acc: string[], entry: Dirent) {
+        if (entry.isFile() && MODULE_FILE_EXTENSIONS_PATTERN.test(entry.name)) {
+            acc.push(nodePath.join(dirPath, entry.name));
+        }
+        return acc;
     },
-): Promise<string[]> {
-    if (typeof isRecursive !== "boolean") {
-        throw new Error(`Invalid isRecursive: '${isRecursive}'. Must be a boolean.`);
+) {
+    validateGetArgs(dirPath, isRecursive, processMode);
+    if (typeof reduceCallback !== "function") {
+        throw new Error(`Invalid reduceCallback: ${reduceCallback}. Must be a function.`);
     }
-    if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
-        throw new Error(`Invalid process mode: '${processMode}'. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
+    async function recursiveCallback(subDirPath: string): Promise<string[]> {
+        return await getModules(subDirPath, true, processMode);
     }
-    try {
-        const entries = await nodeFsPromises.readdir(dirPath, { withFileTypes: true });
-        const filePaths = entries.filter(filterCallback).map(function (entry) {
-            return nodePath.join(dirPath, entry.name);
-        });
-        if (!isRecursive) {
-            return filePaths;
-        }
-        const directories = entries.filter((entry) => {
-            return entry.isDirectory();
-        });
-        if (processMode === "sequential") {
-            const dirSubFilePaths: string[] = [];
-            for (const entry of directories) {
-                const subDirPath = nodePath.join(dirPath, entry.name);
-                const subDirFiles = await getModules(subDirPath, true, processMode, filterCallback);
-                dirSubFilePaths.push(...subDirFiles);
-            }
-            return [...filePaths, ...dirSubFilePaths];
-        }
-        const dirSubFilePaths = await Promise.all(
-            directories.map(async function (entry) {
-                return await getModules(nodePath.join(dirPath, entry.name), true, processMode, filterCallback);
-            }),
-        );
-        return [...filePaths, ...dirSubFilePaths.flat()];
-    } catch (error) {
-        console.error(`Failed to get modules. Directory path: ${dirPath}`, error);
-        return [];
-    }
+    return await getPaths(dirPath, isRecursive, processMode, reduceCallback, recursiveCallback);
 }
 
 function getAsyncAwareCallback(isLoadCallbackAsync: boolean, loadCallback: LoadFoldersCallback) {
