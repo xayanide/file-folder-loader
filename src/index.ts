@@ -67,20 +67,6 @@ function handleError(message: string, error: unknown, logError = console.error) 
     logError(`${message}\nUnknown Error Type: ${typeof error}\n${String(error)}`);
 }
 
-async function processPaths(paths: string[], processMode: string, processPath: ProcessPathCallback) {
-    if (processMode === "concurrent") {
-        await Promise.all(paths.map(processPath));
-        return;
-    }
-    for (const path of paths) {
-        if (nodeUtilTypes.isAsyncFunction(processPath)) {
-            await processPath(path);
-            continue;
-        }
-        processPath(path);
-    }
-}
-
 async function getDirectoryEntries(dirPath: string) {
     try {
         return await nodeFsPromises.readdir(dirPath, { withFileTypes: true });
@@ -239,6 +225,20 @@ async function importModule(fileUrlHref: string, exportType: string, preferredEx
         throw new Error(`Invalid module export. ${errorMessage}. Module: ${fileUrlHref}`);
     }
     return [moduleExport];
+}
+
+async function processPaths(paths: string[], processMode: string, processPath: ProcessPathCallback) {
+    if (processMode === "concurrent") {
+        await Promise.all(paths.map(processPath));
+        return;
+    }
+    for (const path of paths) {
+        if (nodeUtilTypes.isAsyncFunction(processPath)) {
+            await processPath(path);
+            continue;
+        }
+        processPath(path);
+    }
 }
 
 async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallback, options?: LoadFolderOptions) {
