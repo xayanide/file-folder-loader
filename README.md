@@ -14,18 +14,17 @@ npm install file-folder-loader
 ```typescript
 import { getFolders, loadFolders } from "file-folder-loader";
 
-async function exampleLoadFolders() {
+async function init() {
     const dirPath = "./some-directory";
-    const folders = await getFolders(dirPath);
-    // just to demo that it is a string array
-    if (folders.length > 0) {
-        await loadFolders(folders, dirPath, (folderName, folderPath) => {
-            console.log(`Loaded folder: ${folderName} at path: ${folderPath}`);
+    const folderPaths = await getFolders(dirPath);
+    if (folderPaths.length > 0) {
+        await loadFolders(folderPaths, async (folderPath, folderName) => {
+            console.log(`Loaded folder ${folderName} from path: ${folderPath}`);
         });
     }
 }
 
-await exampleLoadFolders();
+await init();
 ```
 
 ### Example 2: Loading Modules
@@ -33,38 +32,35 @@ await exampleLoadFolders();
 ```typescript
 import { getModules, loadModules } from "file-folder-loader";
 
-async function exampleLoadModules() {
+async function init() {
     const dirPath = "./some-directory";
-    const modules = await getModules(dirPath);
-    // just to demo that it is a string array
-    if (modules.length > 0) {
-        await loadModules(modules, dirPath, (moduleExport, modulePath, moduleFileName) => {
-            console.log(`Loaded module: ${moduleFileName} from path: ${modulePath}`);
+    const modulePaths = await getModules(dirPath);
+    if (modulePaths.length > 0) {
+        await loadModules(modulePaths, async (moduleExport, moduleFileUrlHref, moduleFileName) => {
+            console.log(`Loaded module ${moduleFileName} from path: ${moduleFileUrlHref}`);
             console.log(`Module export:`, moduleExport);
         });
     }
 }
 
-await exampleLoadModules();
+await init();
 ```
 
-### Example 3: Loading Folders and Modules Sequentially
+### Example 3: Loading Folders Sequentially and Loading Modules Concurrently
 
 ```typescript
-import { getFolders, loadFolders, getModules, loadModules } from "file-folder-loader";
+import { getFolders, getModules, loadFolders, loadModules } from "file-folder-loader";
 
-async function exampleLoadFoldersAndModules() {
+async function init() {
     const dirPath = "./some-directory";
-    const folders = await getFolders(dirPath);
-    // just to demo that it is a string array
-    if (folders.length > 0) {
-        await loadFolders(folders, dirPath, async (folderName, folderPath) => {
-            console.log(`Loaded folder: ${folderName} at path: ${folderPath}`);
-            const modules = await getModules(folderPath);
-            // just to demo that it is a string array
-            if (modules.length > 0) {
-                await loadModules(modules, folderPath, (moduleExport, modulePath, moduleFileName) => {
-                    console.log(`Loaded module: ${moduleFileName} from path: ${modulePath}`);
+    const folderPaths = await getFolders(dirPath);
+    if (folderPaths.length > 0) {
+        await loadFolders(folderPaths, async (folderPath, folderName) => {
+            console.log(`Loaded folder ${folderName} from path: ${folderPath}`);
+            const modulePaths = await getModules(folderPath);
+            if (modulePaths.length > 0) {
+                await loadModules(modulePaths, async (moduleExport, moduleFileUrlHref, moduleFileName) => {
+                    console.log(`Loaded module ${moduleFileName} from path: ${moduleFileUrlHref}`);
                     console.log(`Module export:`, moduleExport);
                 });
             }
@@ -72,12 +68,12 @@ async function exampleLoadFoldersAndModules() {
     }
 }
 
-await exampleLoadFoldersAndModules();
+await init();
 ```
 
 ## Use Cases
 
-- **Discord Bots**: Load folders and files dynamically, 
+- **Discord Bots**: Load folders and files dynamically,
 - **Modular Applications**: Load user-defined files and folders dynamically.
 
 ## The project's core tech stack

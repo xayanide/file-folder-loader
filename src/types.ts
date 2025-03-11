@@ -7,11 +7,11 @@ interface ModuleExport {
     [key: string]: unknown | undefined;
 }
 
-type ProcessItem = (itemPath: string) => void | Promise<void>;
+type ProcessPathCallback = (itemPath: string) => void | Promise<void>;
 
-type LoadFoldersCallback = (folderName: string, folderPath: string) => unknown | Promise<unknown>;
+type LoadFoldersCallback = (folderPath: string, folderName: string) => unknown | Promise<unknown>;
 
-type LoadModulesCallback = (moduleExport: unknown, modulePath: string, moduleFileName: string) => unknown | Promise<unknown>;
+type LoadModulesCallback = (moduleExport: unknown, moduleFileUrlHref: string, moduleFileName: string) => unknown | Promise<unknown>;
 
 type ProcessMode = "sequential" | "concurrent";
 
@@ -30,4 +30,4 @@ interface LoadModuleOptions {
     isImportEnabled?: boolean;
 }
 
-export type { ExportType, ProcessMode, LoadFolderOptions, LoadFoldersCallback, LoadModuleOptions, LoadModulesCallback, ModuleExport, ModuleNamespace, ProcessItem };
+export type { ExportType, ProcessMode, LoadFolderOptions, LoadFoldersCallback, LoadModuleOptions, LoadModulesCallback, ModuleExport, ModuleNamespace, ProcessPathCallback };
