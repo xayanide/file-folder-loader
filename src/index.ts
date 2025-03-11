@@ -116,7 +116,7 @@ async function getFolders(dirPath: string, options?: GetFoldersOptions) {
     if (options !== undefined && (options === null || typeof options !== "object" || Array.isArray(options))) {
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
     }
-    const getOptions = { ...DEFAULT_GET_FOLDERS_OPTIONS, ...options };
+    const getOptions = { ...DEFAULT_GET_FOLDERS_OPTIONS, ...(options || {}) };
     const isRecursive = getOptions.isRecursive;
     const processMode = getOptions.processMode;
     if (typeof dirPath !== "string" || dirPath.trim() === "") {
@@ -145,7 +145,7 @@ async function getModules(dirPath: string, options?: GetModulesOptions) {
     if (options !== undefined && (options === null || typeof options !== "object" || Array.isArray(options))) {
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
     }
-    const getOptions = { ...DEFAULT_GET_MODULES_OPTIONS, ...options };
+    const getOptions = { ...DEFAULT_GET_MODULES_OPTIONS, ...(options || {}) };
     const isRecursive = getOptions.isRecursive;
     const processMode = getOptions.processMode;
     if (typeof dirPath !== "string" || dirPath.trim() === "") {
@@ -246,7 +246,7 @@ async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallb
     if (options !== undefined && (options === null || typeof options !== "object" || Array.isArray(options))) {
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
     }
-    const loadOptions = { ...DEFAULT_LOAD_FOLDER_OPTIONS, ...options };
+    const loadOptions = { ...DEFAULT_LOAD_FOLDER_OPTIONS, ...(options || {}) };
     const processMode = loadOptions.processMode;
     if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
         throw new Error(`Invalid process mode: ${processMode}. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
@@ -268,7 +268,7 @@ async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallb
     if (options !== undefined && (options === null || typeof options !== "object" || Array.isArray(options))) {
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
     }
-    const loadOptions = { ...DEFAULT_LOAD_MODULE_OPTIONS, ...options };
+    const loadOptions = { ...DEFAULT_LOAD_MODULE_OPTIONS, ...(options || {}) };
     const processMode = loadOptions.processMode;
     const exportType = loadOptions.exportType;
     const preferredExportName = loadOptions.preferredExportName;
