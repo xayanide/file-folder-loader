@@ -122,13 +122,12 @@ function getAsyncAwareCallback(isLoadCallbackAsync: boolean, loadCallback: LoadF
             await loadCallback(folderPath, folderName);
         }
         return processPathAsync;
-    } else {
-        function processPathSync(folderPath: string) {
-            const folderName = nodePath.basename(folderPath);
-            loadCallback(folderPath, folderName);
-        }
-        return processPathSync;
     }
+    function processPathSync(folderPath: string) {
+        const folderName = nodePath.basename(folderPath);
+        loadCallback(folderPath, folderName);
+    }
+    return processPathSync;
 }
 
 async function importModule(fileUrlHref: string, exportType: string, preferredExportName: string) {
@@ -219,11 +218,11 @@ async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallb
     async function processPath(filePath: string) {
         const fileUrlHref = nodeUrl.pathToFileURL(filePath).href;
         const fileName = nodePath.basename(fileUrlHref);
-        if (!isImportEnabled) {
-            if (isLoadCallbackAsync) {
-                await loadCallback(null, fileUrlHref, fileName);
-                return;
-            }
+        if (!isImportEnabled && isLoadCallbackAsync) {
+            await loadCallback(null, fileUrlHref, fileName);
+            return;
+        }
+        if (!isImportEnabled && !isLoadCallbackAsync) {
             loadCallback(null, fileUrlHref, fileName);
             return;
         }
