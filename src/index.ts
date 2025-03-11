@@ -2,7 +2,16 @@ import * as nodeFsPromises from "node:fs/promises";
 import * as nodePath from "node:path";
 import * as nodeUrl from "node:url";
 import * as nodeUtilTypes from "node:util/types";
-import type { LoadFolderOptions, LoadFoldersCallback, LoadModuleOptions, LoadModulesCallback, ModuleExport, ModuleNamespace, ProcessPathCallback } from "./types.js";
+import type {
+    LoadFolderOptions,
+    LoadFoldersCallback,
+    LoadModuleOptions,
+    LoadModulesCallback,
+    ModuleExport,
+    ModuleNamespace,
+    ProcessMode,
+    ProcessPathCallback,
+} from "./types.js";
 import type { Dirent } from "node:fs";
 
 const MODULE_FILE_EXTENSIONS_PATTERN = /\.(m?js|cjs|mts|cts|ts|jsx|tsx)$/;
@@ -60,7 +69,13 @@ async function processPaths(paths: string[], processMode: string, processPath: P
 }
 
 /** Warning: Recursive can be tasking with nested directories. */
-async function getFolders(dirPath: string, isRecursive = false) {
+async function getFolders(dirPath: string, isRecursive = false, processMode: ProcessMode = DEFAULT_FOLDER_PROCESS_MODE) {
+    if (typeof isRecursive !== "boolean") {
+        throw new Error(`Invalid isRecursive: '${isRecursive}'. Must be a boolean.`);
+    }
+    if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
+        throw new Error(`Invalid process mode: '${processMode}'. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
+    }
     try {
         const entries = await nodeFsPromises.readdir(dirPath, { withFileTypes: true });
         const directories = entries.filter((entry) => {
@@ -71,6 +86,15 @@ async function getFolders(dirPath: string, isRecursive = false) {
         });
         if (!isRecursive) {
             return directoryPaths;
+        }
+        if (processMode === "sequential") {
+            const subDirPaths: string[] = [];
+            for (const entry of directories) {
+                const subDirPath = nodePath.join(dirPath, entry.name);
+                const subDirDirectory = await getFolders(subDirPath, true, processMode);
+                subDirPaths.push(...subDirDirectory);
+            }
+            return [...directoryPaths, ...subDirPaths];
         }
         const subDirPaths = await Promise.all(
             directories.map(async function (entry): Promise<string[]> {
@@ -88,10 +112,17 @@ async function getFolders(dirPath: string, isRecursive = false) {
 async function getModules(
     dirPath: string,
     isRecursive = false,
+    processMode: ProcessMode = DEFAULT_MODULE_PROCESS_MODE,
     filterCallback = function (entry: Dirent) {
         return entry.isFile() && MODULE_FILE_EXTENSIONS_PATTERN.test(entry.name);
     },
 ): Promise<string[]> {
+    if (typeof isRecursive !== "boolean") {
+        throw new Error(`Invalid isRecursive: '${isRecursive}'. Must be a boolean.`);
+    }
+    if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
+        throw new Error(`Invalid process mode: '${processMode}'. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
+    }
     try {
         const entries = await nodeFsPromises.readdir(dirPath, { withFileTypes: true });
         const filePaths = entries.filter(filterCallback).map(function (entry) {
@@ -100,15 +131,24 @@ async function getModules(
         if (!isRecursive) {
             return filePaths;
         }
-        const subDirs = entries.filter((entry) => {
+        const directories = entries.filter((entry) => {
             return entry.isDirectory();
         });
-        const subDirFilePaths = await Promise.all(
-            subDirs.map(async function (entry) {
-                return await getModules(nodePath.join(dirPath, entry.name), true, filterCallback);
+        if (processMode === "sequential") {
+            const dirSubFilePaths: string[] = [];
+            for (const entry of directories) {
+                const subDirPath = nodePath.join(dirPath, entry.name);
+                const subDirFiles = await getModules(subDirPath, true, processMode, filterCallback);
+                dirSubFilePaths.push(...subDirFiles);
+            }
+            return [...filePaths, ...dirSubFilePaths];
+        }
+        const dirSubFilePaths = await Promise.all(
+            directories.map(async function (entry) {
+                return await getModules(nodePath.join(dirPath, entry.name), true, processMode, filterCallback);
             }),
         );
-        return [...filePaths, ...subDirFilePaths.flat()];
+        return [...filePaths, ...dirSubFilePaths.flat()];
     } catch (error) {
         console.error(`Failed to get modules. Directory path: ${dirPath}`, error);
         return [];
@@ -200,10 +240,10 @@ async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallb
     const preferredExportName = loadOptions.preferredExportName;
     const isImportEnabled = loadOptions.isImportEnabled;
     if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
-        throw new Error(`Invalid process mode: ${processMode}. Must be a non-empty string.`);
+        throw new Error(`Invalid process mode: ${processMode}. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
     }
     if (!exportType || !DEFAULT_EXPORT_TYPES.includes(exportType)) {
-        throw new Error(`Invalid exportType: ${exportType}. Must be a non-empty string.`);
+        throw new Error(`Invalid exportType: ${exportType}. Must be one of string: ${DEFAULT_EXPORT_TYPES.join(", ")}`);
     }
     if (typeof preferredExportName !== "string" || preferredExportName.trim() === "") {
         throw new Error(`Invalid preferred export name: ${preferredExportName}. Must be a non-empty string.`);
