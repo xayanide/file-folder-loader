@@ -5,9 +5,9 @@ import * as nodeUtilTypes from "node:util/types";
 import type {
     GetFoldersOptions,
     GetModulesOptions,
-    LoadFolderOptions,
+    LoadFoldersOptions,
     LoadFoldersCallback,
-    LoadModuleOptions,
+    LoadModulesOptions,
     LoadModulesCallback,
     ModuleExport,
     ModuleNamespace,
@@ -241,7 +241,7 @@ async function processPaths(paths: string[], processMode: string, processPathCal
     }
 }
 
-async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallback, options?: LoadFolderOptions) {
+async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallback, options?: LoadFoldersOptions) {
     if (!Array.isArray(folderPaths)) {
         throw new Error(`Invalid folderPaths: ${folderPaths}. Must be a string array.`);
     }
@@ -263,7 +263,7 @@ async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallb
     return await processPaths(folderPaths, processMode, getAsyncAwareProcessPathCallback(isLoadCallbackAsync, loadCallback));
 }
 
-async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallback, options?: LoadModuleOptions) {
+async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallback, options?: LoadModulesOptions) {
     if (!Array.isArray(modulePaths)) {
         throw new Error(`Invalid modulePaths: ${modulePaths}. Must be a string array.`);
     }

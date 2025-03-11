@@ -32,11 +32,11 @@ interface GetModulesOptions {
     reduceCallback?: undefined | ((acc: string[], entry: Dirent) => string[]);
 }
 
-interface LoadFolderOptions {
+interface LoadFoldersOptions {
     processMode?: ProcessMode;
 }
 
-interface LoadModuleOptions {
+interface LoadModulesOptions {
     processMode?: ProcessMode;
     exportType?: ExportType;
     preferredExportName?: NamedExports;
@@ -48,9 +48,9 @@ export type {
     GetFoldersOptions,
     GetModulesOptions,
     ProcessMode,
-    LoadFolderOptions,
+    LoadFoldersOptions,
     LoadFoldersCallback,
-    LoadModuleOptions,
+    LoadModulesOptions,
     LoadModulesCallback,
     ModuleExport,
     ModuleNamespace,
