@@ -3,6 +3,8 @@ import * as nodePath from "node:path";
 import * as nodeUrl from "node:url";
 import * as nodeUtilTypes from "node:util/types";
 import type {
+    GetFoldersOptions,
+    GetModulesOptions,
     LoadFolderOptions,
     LoadFoldersCallback,
     LoadModuleOptions,
@@ -27,6 +29,17 @@ const DEFAULT_NAMED_EXPORT = "default";
 
 const DEFAULT_PROCESS_MODES = ["sequential", "concurrent"];
 const DEFAULT_EXPORT_TYPES = ["default", "named", "all"];
+
+const DEFAULT_GET_FOLDERS_OPTIONS = {
+    isRecursive: false,
+    processMode: DEFAULT_FOLDER_PROCESS_MODE,
+};
+
+const DEFAULT_GET_MODULES_OPTIONS: GetModulesOptions = {
+    isRecursive: false,
+    processMode: DEFAULT_MODULE_PROCESS_MODE,
+    reduceCallback: undefined,
+};
 
 const DEFAULT_LOAD_FOLDER_OPTIONS = {
     processMode: DEFAULT_FOLDER_PROCESS_MODE,
@@ -57,26 +70,14 @@ function handleError(message: string, error: unknown, logError = console.error) 
 async function processPaths(paths: string[], processMode: string, processPath: ProcessPathCallback) {
     if (processMode === "concurrent") {
         await Promise.all(paths.map(processPath));
-    } else {
-        for (const path of paths) {
-            if (nodeUtilTypes.isAsyncFunction(processPath)) {
-                await processPath(path);
-                continue;
-            }
-            processPath(path);
+        return;
+    }
+    for (const path of paths) {
+        if (nodeUtilTypes.isAsyncFunction(processPath)) {
+            await processPath(path);
+            continue;
         }
-    }
-}
-
-function validateGetArgs(dirPath: string, isRecursive: boolean, processMode: ProcessMode) {
-    if (typeof dirPath !== "string" || dirPath.trim() === "") {
-        throw new Error(`Invalid dirPath: '${dirPath}'. Must be a non-empty string.`);
-    }
-    if (typeof isRecursive !== "boolean") {
-        throw new Error(`Invalid isRecursive: '${isRecursive}'. Must be a boolean.`);
-    }
-    if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
-        throw new Error(`Invalid process mode: '${processMode}'. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
+        processPath(path);
     }
 }
 
@@ -92,7 +93,7 @@ async function getDirectoryEntries(dirPath: string) {
 async function getPaths(
     dirPath: string,
     isRecursive: boolean,
-    processMode: ProcessMode,
+    processMode: string | ProcessMode,
     reduceCallback: (acc: string[], entry: Dirent) => string[],
     recursiveCallback: (subDirPath: string) => Promise<string[]>,
 ) {
@@ -126,8 +127,22 @@ async function getPaths(
 }
 
 /** Warning: Recursive can be tasking with nested directories. */
-async function getFolders(dirPath: string, isRecursive = false, processMode: ProcessMode = DEFAULT_FOLDER_PROCESS_MODE) {
-    validateGetArgs(dirPath, isRecursive, processMode);
+async function getFolders(dirPath: string, options?: GetFoldersOptions) {
+    if (typeof options !== "object") {
+        throw new Error(`Invalid options: '${options}'. Must be a an object.`);
+    }
+    const getOptions = { ...DEFAULT_GET_FOLDERS_OPTIONS, ...options };
+    const isRecursive = getOptions.isRecursive;
+    const processMode = getOptions.processMode;
+    if (typeof dirPath !== "string" || dirPath.trim() === "") {
+        throw new Error(`Invalid dirPath: '${dirPath}'. Must be a non-empty string.`);
+    }
+    if (typeof isRecursive !== "boolean") {
+        throw new Error(`Invalid isRecursive: '${isRecursive}'. Must be a boolean.`);
+    }
+    if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
+        throw new Error(`Invalid process mode: '${processMode}'. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
+    }
     function reduceCallback(acc: string[], entry: Dirent) {
         if (entry.isDirectory()) {
             acc.push(nodePath.join(dirPath, entry.name));
@@ -135,29 +150,40 @@ async function getFolders(dirPath: string, isRecursive = false, processMode: Pro
         return acc;
     }
     async function recursiveCallback(subDirPath: string): Promise<string[]> {
-        return await getFolders(subDirPath, true, processMode);
+        return await getFolders(subDirPath, getOptions);
     }
     return await getPaths(dirPath, isRecursive, processMode, reduceCallback, recursiveCallback);
 }
 
 /** Warning: Recursive can be tasking for nested directories. */
-async function getModules(
-    dirPath: string,
-    isRecursive = false,
-    processMode: ProcessMode = DEFAULT_MODULE_PROCESS_MODE,
-    reduceCallback = function (acc: string[], entry: Dirent) {
+async function getModules(dirPath: string, options?: GetModulesOptions) {
+    if (typeof options !== "object") {
+        throw new Error(`Invalid options: '${options}'. Must be a an object.`);
+    }
+    DEFAULT_GET_MODULES_OPTIONS.reduceCallback = function (acc: string[], entry: Dirent) {
         if (entry.isFile() && MODULE_FILE_EXTENSIONS_PATTERN.test(entry.name)) {
             acc.push(nodePath.join(dirPath, entry.name));
         }
         return acc;
-    },
-) {
-    validateGetArgs(dirPath, isRecursive, processMode);
+    };
+    const getOptions = { ...DEFAULT_GET_MODULES_OPTIONS, ...options };
+    const isRecursive = getOptions.isRecursive;
+    const processMode = getOptions.processMode;
+    const reduceCallback = getOptions.reduceCallback;
+    if (typeof dirPath !== "string" || dirPath.trim() === "") {
+        throw new Error(`Invalid dirPath: '${dirPath}'. Must be a non-empty string.`);
+    }
+    if (typeof isRecursive !== "boolean") {
+        throw new Error(`Invalid isRecursive: '${isRecursive}'. Must be a boolean.`);
+    }
+    if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
+        throw new Error(`Invalid process mode: '${processMode}'. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
+    }
     if (typeof reduceCallback !== "function") {
         throw new Error(`Invalid reduceCallback: ${reduceCallback}. Must be a function.`);
     }
     async function recursiveCallback(subDirPath: string): Promise<string[]> {
-        return await getModules(subDirPath, true, processMode);
+        return await getModules(subDirPath, getOptions);
     }
     return await getPaths(dirPath, isRecursive, processMode, reduceCallback, recursiveCallback);
 }
@@ -222,6 +248,9 @@ async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallb
     if (typeof loadCallback !== "function") {
         throw new Error(`Invalid load callback: ${loadCallback}. Must be a function.`);
     }
+    if (typeof options !== "object") {
+        throw new Error(`Invalid options: '${options}'. Must be a an object.`);
+    }
     const loadOptions = { ...DEFAULT_LOAD_FOLDER_OPTIONS, ...options };
     const processMode = loadOptions.processMode;
     if (typeof processMode !== "string" || !DEFAULT_PROCESS_MODES.includes(processMode)) {
@@ -240,6 +269,9 @@ async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallb
     }
     if (typeof loadCallback !== "function") {
         throw new Error(`Invalid load callback: ${loadCallback}. Must be a function.`);
+    }
+    if (typeof options !== "object") {
+        throw new Error(`Invalid options: '${options}'. Must be a an object.`);
     }
     const loadOptions = { ...DEFAULT_LOAD_MODULE_OPTIONS, ...options };
     const processMode = loadOptions.processMode;

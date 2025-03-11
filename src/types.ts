@@ -1,3 +1,5 @@
+import type { Dirent } from "fs";
+
 interface ModuleNamespace {
     default?: ModuleExport;
     [key: string]: ModuleExport | undefined;
@@ -19,6 +21,17 @@ type ExportType = "default" | "named" | "all";
 
 type NamedExports = string | "default" | "*";
 
+interface GetFoldersOptions {
+    isRecursive?: boolean;
+    processMode?: string | ProcessMode;
+}
+
+interface GetModulesOptions {
+    isRecursive?: boolean;
+    processMode?: string | ProcessMode;
+    reduceCallback?: undefined | ((acc: string[], entry: Dirent) => string[]);
+}
+
 interface LoadFolderOptions {
     processMode?: ProcessMode;
 }
@@ -30,4 +43,16 @@ interface LoadModuleOptions {
     isImportEnabled?: boolean;
 }
 
-export type { ExportType, ProcessMode, LoadFolderOptions, LoadFoldersCallback, LoadModuleOptions, LoadModulesCallback, ModuleExport, ModuleNamespace, ProcessPathCallback };
+export type {
+    ExportType,
+    GetFoldersOptions,
+    GetModulesOptions,
+    ProcessMode,
+    LoadFolderOptions,
+    LoadFoldersCallback,
+    LoadModuleOptions,
+    LoadModulesCallback,
+    ModuleExport,
+    ModuleNamespace,
+    ProcessPathCallback,
+};
