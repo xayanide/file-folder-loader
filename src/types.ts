@@ -1,5 +1,3 @@
-import type { Dirent } from "fs";
-
 interface ModuleNamespace {
     default?: ModuleExport;
     [key: string]: ModuleExport | undefined;
@@ -29,7 +27,6 @@ interface GetFoldersOptions {
 interface GetModulesOptions {
     isRecursive?: boolean;
     processMode?: string | ProcessMode;
-    reduceCallback?: undefined | ((acc: string[], entry: Dirent) => string[]);
 }
 
 interface LoadFoldersOptions {

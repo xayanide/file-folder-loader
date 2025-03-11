@@ -35,10 +35,9 @@ const DEFAULT_GET_FOLDERS_OPTIONS = {
     processMode: DEFAULT_FOLDER_PROCESS_MODE,
 };
 
-const DEFAULT_GET_MODULES_OPTIONS: GetModulesOptions = {
+const DEFAULT_GET_MODULES_OPTIONS = {
     isRecursive: false,
     processMode: DEFAULT_MODULE_PROCESS_MODE,
-    reduceCallback: undefined,
 };
 
 const DEFAULT_LOAD_FOLDER_OPTIONS = {
@@ -146,16 +145,9 @@ async function getModules(dirPath: string, options?: GetModulesOptions) {
     if (typeof options !== "object") {
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
     }
-    DEFAULT_GET_MODULES_OPTIONS.reduceCallback = function (acc: string[], entry: Dirent) {
-        if (entry.isFile() && MODULE_FILE_EXTENSIONS_PATTERN.test(entry.name)) {
-            acc.push(nodePath.join(dirPath, entry.name));
-        }
-        return acc;
-    };
     const getOptions = { ...DEFAULT_GET_MODULES_OPTIONS, ...options };
     const isRecursive = getOptions.isRecursive;
     const processMode = getOptions.processMode;
-    const reduceCallback = getOptions.reduceCallback;
     if (typeof dirPath !== "string" || dirPath.trim() === "") {
         throw new Error(`Invalid dirPath: '${dirPath}'. Must be a non-empty string.`);
     }
@@ -165,8 +157,11 @@ async function getModules(dirPath: string, options?: GetModulesOptions) {
     if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
         throw new Error(`Invalid process mode: '${processMode}'. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
     }
-    if (typeof reduceCallback !== "function") {
-        throw new Error(`Invalid reduceCallback: ${reduceCallback}. Must be a function.`);
+    function reduceCallback(acc: string[], entry: Dirent) {
+        if (entry.isFile() && MODULE_FILE_EXTENSIONS_PATTERN.test(entry.name)) {
+            acc.push(nodePath.join(dirPath, entry.name));
+        }
+        return acc;
     }
     async function recursiveCallback(subDirPath: string): Promise<string[]> {
         return await getModules(subDirPath, getOptions);
