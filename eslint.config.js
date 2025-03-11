@@ -34,7 +34,7 @@ const eslintConfigPreferences = {
             "func-style": ["error", "declaration", { overrides: { namedExports: "ignore" } }],
             "no-console": "off",
             "radix": ["error", "always"],
-            "no-shadow": ["error", { builtinGlobals: true, hoist: "all", allow: [], ignoreOnInitialization: true }],
+            "no-shadow": ["error", { builtinGlobals: true }],
             "no-negated-condition": "error",
             "no-unneeded-ternary": ["error", { defaultAssignment: true }],
             "no-nested-ternary": "error",

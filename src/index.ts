@@ -145,7 +145,8 @@ async function importModule(fileUrlHref: string, exportType: string, preferredEx
             moduleExports.push(moduleExport);
         }
         return moduleExports;
-    } else if (isNamedExportType && preferredExportName === "*") {
+    }
+    if (isNamedExportType && preferredExportName === "*") {
         const moduleExports: ModuleExport[] = [];
         for (const exportName in moduleNamespace) {
             const moduleExport = moduleNamespace[exportName];
@@ -156,20 +157,16 @@ async function importModule(fileUrlHref: string, exportType: string, preferredEx
             moduleExports.push(moduleExport);
         }
         return moduleExports;
-    } else {
-        const exportName = isNamedExportType ? preferredExportName : DEFAULT_EXPORT_NAME;
-        const moduleExport = moduleNamespace[exportName];
-        if (!moduleExport || !Object.prototype.hasOwnProperty.call(moduleNamespace, exportName)) {
-            throw new Error(
-                isNamedExportType
-                    ? `Invalid module export. Must be a named export called '${preferredExportName}'. ${
-                          exportName === DEFAULT_EXPORT_NAME ? "Unable to verify named export" : "Unable to verify preferred export name"
-                      } '${exportName}'. Module: ${fileUrlHref}`
-                    : `Invalid module export. Must be a default export. Unable to verify default export '${exportName}'. Module: ${fileUrlHref}`,
-            );
-        }
-        return [moduleExport];
     }
+    const exportName = isNamedExportType ? preferredExportName : DEFAULT_EXPORT_NAME;
+    const moduleExport = moduleNamespace[exportName];
+    if (!moduleExport || !Object.prototype.hasOwnProperty.call(moduleNamespace, exportName)) {
+        const errorMessage = isNamedExportType
+            ? `Must be a named export called '${preferredExportName}'. ${exportName === DEFAULT_EXPORT_NAME ? "Unable to verify named export" : "Unable to verify preferred export name"} '${exportName}'.`
+            : `Must be a default export. Unable to verify default export '${exportName}'.`;
+        throw new Error(`Invalid module export. ${errorMessage} Module: ${fileUrlHref}`);
+    }
+    return [moduleExport];
 }
 
 async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallback, options?: LoadFolderOptions) {
