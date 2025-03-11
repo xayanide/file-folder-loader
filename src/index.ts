@@ -113,7 +113,7 @@ async function getPaths(
 
 /** Warning: Recursive can be tasking with nested directories. */
 async function getFolders(dirPath: string, options?: GetFoldersOptions) {
-    if (typeof options !== "object") {
+    if (options !== undefined && typeof options !== "object") {
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
     }
     const getOptions = { ...DEFAULT_GET_FOLDERS_OPTIONS, ...options };
@@ -142,7 +142,7 @@ async function getFolders(dirPath: string, options?: GetFoldersOptions) {
 
 /** Warning: Recursive can be tasking for nested directories. */
 async function getModules(dirPath: string, options?: GetModulesOptions) {
-    if (typeof options !== "object") {
+    if (options !== undefined && typeof options !== "object") {
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
     }
     const getOptions = { ...DEFAULT_GET_MODULES_OPTIONS, ...options };
@@ -243,7 +243,7 @@ async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallb
     if (typeof loadCallback !== "function") {
         throw new Error(`Invalid load callback: ${loadCallback}. Must be a function.`);
     }
-    if (typeof options !== "object") {
+    if (options !== undefined && typeof options !== "object") {
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
     }
     const loadOptions = { ...DEFAULT_LOAD_FOLDER_OPTIONS, ...options };
@@ -265,7 +265,7 @@ async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallb
     if (typeof loadCallback !== "function") {
         throw new Error(`Invalid load callback: ${loadCallback}. Must be a function.`);
     }
-    if (typeof options !== "object") {
+    if (options !== undefined && typeof options !== "object") {
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
     }
     const loadOptions = { ...DEFAULT_LOAD_MODULE_OPTIONS, ...options };
