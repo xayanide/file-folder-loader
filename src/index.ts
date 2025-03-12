@@ -173,7 +173,7 @@ function getAsyncAwareProcessPathCallback(isLoadCallbackAsync: boolean, loadCall
     if (isLoadCallbackAsync) {
         async function processPathAsync(folderPath: string) {
             if (typeof folderPath !== "string" || folderPath.trim() === "") {
-                throw new Error(`Invalid folder path: ${folderPath}. Must be a non-empty string.`);
+                throw new Error(`Invalid folder path: '${folderPath}'. Must be a non-empty string.`);
             }
             const folderName = nodePath.basename(folderPath);
             await loadCallback(folderPath, folderName);
@@ -182,7 +182,7 @@ function getAsyncAwareProcessPathCallback(isLoadCallbackAsync: boolean, loadCall
     }
     function processPathSync(folderPath: string) {
         if (typeof folderPath !== "string" || folderPath.trim() === "") {
-            throw new Error(`Invalid folder path: ${folderPath}. Must be a non-empty string.`);
+            throw new Error(`Invalid folder path: '${folderPath}'. Must be a non-empty string.`);
         }
         const folderName = nodePath.basename(folderPath);
         loadCallback(folderPath, folderName);
@@ -244,10 +244,10 @@ async function processPaths(paths: string[], processMode: string, processPathCal
 
 async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallback, options?: LoadFoldersOptions) {
     if (!Array.isArray(folderPaths)) {
-        throw new Error(`Invalid paths: ${folderPaths}. Must be an array.`);
+        throw new Error(`Invalid paths: '${folderPaths}'. Must be an array.`);
     }
     if (typeof loadCallback !== "function") {
-        throw new Error(`Invalid load callback: ${loadCallback}. Must be a function.`);
+        throw new Error(`Invalid load callback: '${loadCallback}'. Must be a function.`);
     }
     if (options !== undefined && (options === null || typeof options !== "object" || Array.isArray(options))) {
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
@@ -255,21 +255,21 @@ async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallb
     const loadOptions = { ...DEFAULT_LOAD_FOLDER_OPTIONS, ...(options || {}) };
     const processMode = loadOptions.processMode;
     if (!DEFAULT_PROCESS_MODES.includes(processMode)) {
-        throw new Error(`Invalid process mode: ${processMode}. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
+        throw new Error(`Invalid process mode: '${processMode}'. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
     }
     const isLoadCallbackAsync = nodeUtilTypes.isAsyncFunction(loadCallback);
     if (processMode === "concurrent" && !isLoadCallbackAsync) {
-        throw new Error("Invalid load callback. Process mode: concurrent requires an asynchronous load callback.");
+        throw new Error("Invalid load callback. Process mode: 'concurrent' requires an asynchronous load callback.");
     }
     return await processPaths(folderPaths, processMode, getAsyncAwareProcessPathCallback(isLoadCallbackAsync, loadCallback));
 }
 
 async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallback, options?: LoadModulesOptions) {
     if (!Array.isArray(modulePaths)) {
-        throw new Error(`Invalid paths: ${modulePaths}. Must be an array.`);
+        throw new Error(`Invalid paths: '${modulePaths}'. Must be an array.`);
     }
     if (typeof loadCallback !== "function") {
-        throw new Error(`Invalid load callback: ${loadCallback}. Must be a function.`);
+        throw new Error(`Invalid load callback: '${loadCallback}'. Must be a function.`);
     }
     if (options !== undefined && (options === null || typeof options !== "object" || Array.isArray(options))) {
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
@@ -280,24 +280,24 @@ async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallb
     const preferredExportName = loadOptions.preferredExportName;
     const isImportEnabled = loadOptions.isImportEnabled;
     if (!DEFAULT_PROCESS_MODES.includes(processMode)) {
-        throw new Error(`Invalid process mode: ${processMode}. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
+        throw new Error(`Invalid process mode: '${processMode}'. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
     }
     if (!DEFAULT_EXPORT_TYPES.includes(exportType)) {
-        throw new Error(`Invalid exportType: ${exportType}. Must be one of string: ${DEFAULT_EXPORT_TYPES.join(", ")}`);
+        throw new Error(`Invalid exportType: '${exportType}'. Must be one of string: ${DEFAULT_EXPORT_TYPES.join(", ")}`);
     }
     if (typeof preferredExportName !== "string" || preferredExportName.trim() === "") {
-        throw new Error(`Invalid preferred export name: ${preferredExportName}. Must be a non-empty string.`);
+        throw new Error(`Invalid preferred export name: '${preferredExportName}'. Must be a non-empty string.`);
     }
     if (typeof isImportEnabled !== "boolean") {
-        throw new Error(`Invalid isImportEnabled: ${isImportEnabled}. Must be a boolean.`);
+        throw new Error(`Invalid isImportEnabled: '${isImportEnabled}'. Must be a boolean.`);
     }
     const isLoadCallbackAsync = nodeUtilTypes.isAsyncFunction(loadCallback);
     if (processMode === "concurrent" && !isLoadCallbackAsync) {
-        throw new Error("Invalid load callback. Process mode: concurrent requires an asynchronous load callback.");
+        throw new Error("Invalid load callback. Process mode: 'concurrent' requires an asynchronous load callback.");
     }
     async function processPath(filePath: string) {
         if (typeof filePath !== "string" || filePath.trim() === "") {
-            throw new Error(`Invalid module path: ${filePath}. Must be a non-empty string.`);
+            throw new Error(`Invalid module path: '${filePath}'. Must be a non-empty string.`);
         }
         const fileUrlHref = nodeUrl.pathToFileURL(filePath).href;
         const fileName = nodePath.basename(fileUrlHref);
