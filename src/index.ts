@@ -240,10 +240,12 @@ async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallb
     if (!Array.isArray(folderPaths)) {
         throw new Error("Invalid paths: Must be an array.");
     }
-    for (let i = 0; i < folderPaths.length; i++) {
-        if (typeof folderPaths[i] !== "string") {
-            throw new Error("Invalid paths: All elements must be strings.");
-        }
+    if (
+        !folderPaths.every(function (element) {
+            return typeof element === "string";
+        })
+    ) {
+        throw new Error("Invalid paths: All elements must be strings.");
     }
     if (typeof loadCallback !== "function") {
         throw new Error(`Invalid load callback: ${loadCallback}. Must be a function.`);
@@ -267,10 +269,12 @@ async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallb
     if (!Array.isArray(modulePaths)) {
         throw new Error("Invalid paths: Must be an array.");
     }
-    for (let i = 0; i < modulePaths.length; i++) {
-        if (typeof modulePaths[i] !== "string") {
-            throw new Error("Invalid paths: All elements must be strings.");
-        }
+    if (
+        !modulePaths.every(function (element) {
+            return typeof element === "string";
+        })
+    ) {
+        throw new Error("Invalid paths: All elements must be strings.");
     }
     if (typeof loadCallback !== "function") {
         throw new Error(`Invalid load callback: ${loadCallback}. Must be a function.`);
