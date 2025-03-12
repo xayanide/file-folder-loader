@@ -172,12 +172,18 @@ async function getModules(dirPath: string, options?: GetModulesOptions) {
 function getAsyncAwareProcessPathCallback(isLoadCallbackAsync: boolean, loadCallback: LoadFoldersCallback) {
     if (isLoadCallbackAsync) {
         async function processPathAsync(folderPath: string) {
+            if (typeof folderPath !== "string" || folderPath.trim() === "") {
+                throw new Error(`Invalid folder path: ${folderPath}. Must be a non-empty string.`);
+            }
             const folderName = nodePath.basename(folderPath);
             await loadCallback(folderPath, folderName);
         }
         return processPathAsync;
     }
     function processPathSync(folderPath: string) {
+        if (typeof folderPath !== "string" || folderPath.trim() === "") {
+            throw new Error(`Invalid folder path: ${folderPath}. Must be a non-empty string.`);
+        }
         const folderName = nodePath.basename(folderPath);
         loadCallback(folderPath, folderName);
     }
@@ -237,6 +243,9 @@ async function processPaths(paths: string[], processMode: string, processPathCal
 }
 
 async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallback, options?: LoadFoldersOptions) {
+    if (!Array.isArray(folderPaths)) {
+        throw new Error(`Invalid paths: ${folderPaths}. Must be an array.`);
+    }
     if (typeof loadCallback !== "function") {
         throw new Error(`Invalid load callback: ${loadCallback}. Must be a function.`);
     }
@@ -256,6 +265,9 @@ async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallb
 }
 
 async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallback, options?: LoadModulesOptions) {
+    if (!Array.isArray(modulePaths)) {
+        throw new Error(`Invalid paths: ${modulePaths}. Must be an array.`);
+    }
     if (typeof loadCallback !== "function") {
         throw new Error(`Invalid load callback: ${loadCallback}. Must be a function.`);
     }
@@ -284,6 +296,9 @@ async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallb
         throw new Error("Invalid load callback. Process mode: concurrent requires an asynchronous load callback.");
     }
     async function processPath(filePath: string) {
+        if (typeof filePath !== "string" || filePath.trim() === "") {
+            throw new Error(`Invalid module path: ${filePath}. Must be a non-empty string.`);
+        }
         const fileUrlHref = nodeUrl.pathToFileURL(filePath).href;
         const fileName = nodePath.basename(fileUrlHref);
         if (!isImportEnabled && isLoadCallbackAsync) {
