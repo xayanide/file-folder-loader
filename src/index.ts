@@ -111,7 +111,7 @@ async function getPaths(
     return [...paths, ...subDirResults.flat()];
 }
 
-/** Warning: Recursive can be tasking with nested directories. */
+/** Warning: Recursive can be demanding with nested directories. */
 async function getFolders(dirPath: string, options?: GetFoldersOptions) {
     if (options !== undefined && (options === null || typeof options !== "object" || Array.isArray(options))) {
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
@@ -140,7 +140,7 @@ async function getFolders(dirPath: string, options?: GetFoldersOptions) {
     return await getPaths(dirPath, isRecursive, processMode, reduceCallback, recursiveCallback);
 }
 
-/** Warning: Recursive can be tasking for nested directories. */
+/** Warning: Recursive can be demanding with nested directories. */
 async function getModules(dirPath: string, options?: GetModulesOptions) {
     if (options !== undefined && (options === null || typeof options !== "object" || Array.isArray(options))) {
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
