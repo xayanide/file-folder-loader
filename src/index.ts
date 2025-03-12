@@ -125,7 +125,7 @@ async function getFolders(dirPath: string, options?: GetFoldersOptions) {
     if (typeof isRecursive !== "boolean") {
         throw new Error(`Invalid isRecursive: '${isRecursive}'. Must be a boolean.`);
     }
-    if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
+    if (!DEFAULT_PROCESS_MODES.includes(processMode)) {
         throw new Error(`Invalid process mode: '${processMode}'. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
     }
     function reduceCallback(acc: string[], entry: Dirent) {
@@ -154,7 +154,7 @@ async function getModules(dirPath: string, options?: GetModulesOptions) {
     if (typeof isRecursive !== "boolean") {
         throw new Error(`Invalid isRecursive: '${isRecursive}'. Must be a boolean.`);
     }
-    if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
+    if (!DEFAULT_PROCESS_MODES.includes(processMode)) {
         throw new Error(`Invalid process mode: '${processMode}'. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
     }
     function reduceCallback(acc: string[], entry: Dirent) {
@@ -237,16 +237,6 @@ async function processPaths(paths: string[], processMode: string, processPathCal
 }
 
 async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallback, options?: LoadFoldersOptions) {
-    if (!Array.isArray(folderPaths)) {
-        throw new Error("Invalid paths: Must be an array.");
-    }
-    if (
-        !folderPaths.every(function (element) {
-            return typeof element === "string";
-        })
-    ) {
-        throw new Error("Invalid paths: All elements must be strings.");
-    }
     if (typeof loadCallback !== "function") {
         throw new Error(`Invalid load callback: ${loadCallback}. Must be a function.`);
     }
@@ -255,7 +245,7 @@ async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallb
     }
     const loadOptions = { ...DEFAULT_LOAD_FOLDER_OPTIONS, ...(options || {}) };
     const processMode = loadOptions.processMode;
-    if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
+    if (!DEFAULT_PROCESS_MODES.includes(processMode)) {
         throw new Error(`Invalid process mode: ${processMode}. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
     }
     const isLoadCallbackAsync = nodeUtilTypes.isAsyncFunction(loadCallback);
@@ -266,16 +256,6 @@ async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallb
 }
 
 async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallback, options?: LoadModulesOptions) {
-    if (!Array.isArray(modulePaths)) {
-        throw new Error("Invalid paths: Must be an array.");
-    }
-    if (
-        !modulePaths.every(function (element) {
-            return typeof element === "string";
-        })
-    ) {
-        throw new Error("Invalid paths: All elements must be strings.");
-    }
     if (typeof loadCallback !== "function") {
         throw new Error(`Invalid load callback: ${loadCallback}. Must be a function.`);
     }
@@ -287,10 +267,10 @@ async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallb
     const exportType = loadOptions.exportType;
     const preferredExportName = loadOptions.preferredExportName;
     const isImportEnabled = loadOptions.isImportEnabled;
-    if (!processMode || !DEFAULT_PROCESS_MODES.includes(processMode)) {
+    if (!DEFAULT_PROCESS_MODES.includes(processMode)) {
         throw new Error(`Invalid process mode: ${processMode}. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
     }
-    if (!exportType || !DEFAULT_EXPORT_TYPES.includes(exportType)) {
+    if (!DEFAULT_EXPORT_TYPES.includes(exportType)) {
         throw new Error(`Invalid exportType: ${exportType}. Must be one of string: ${DEFAULT_EXPORT_TYPES.join(", ")}`);
     }
     if (typeof preferredExportName !== "string" || preferredExportName.trim() === "") {
