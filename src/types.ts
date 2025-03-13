@@ -1,55 +1,64 @@
+import type { Dirent } from "node:fs";
+
+type ModuleExport = unknown | undefined | null;
+
 interface ModuleNamespace {
     default?: ModuleExport;
     [key: string]: ModuleExport | undefined;
 }
 
-interface ModuleExport {
-    [key: string]: unknown | undefined;
-}
+type ProcessFileCallback = (file: Dirent, folderPath: string) => void | Promise<void>;
 
 type ProcessPathCallback = (itemPath: string) => void | Promise<void>;
 
-type LoadFoldersCallback = (folderPath: string, folderName: string) => unknown | Promise<unknown>;
+type LoadFoldersCallback = (folderName: string, folderPath: string) => void | Promise<void>;
 
-type LoadModulesCallback = (moduleExport: unknown, moduleFileUrlHref: string, moduleFileName: string) => unknown | Promise<unknown>;
+type LoadModulesCallback = (moduleExport: ModuleExport, moduleFileUrlHref: string, moduleFileName: string) => void | Promise<void>;
 
 type ProcessMode = "sequential" | "concurrent";
 
 type ExportType = "default" | "named" | "all";
 
-type NamedExports = string | "default" | "*";
-
-interface GetFoldersOptions {
-    isRecursive?: boolean;
-    processMode?: string | ProcessMode;
-}
+type PreferredExportName = string | "default" | "*";
 
 interface GetModulesOptions {
     isRecursive?: boolean;
-    processMode?: string | ProcessMode;
+    processMode?: ProcessMode;
 }
 
-interface LoadFoldersOptions {
+interface GetFoldersOptions {
+    isRecursive?: boolean;
     processMode?: ProcessMode;
 }
 
 interface LoadModulesOptions {
     processMode?: ProcessMode;
     exportType?: ExportType;
-    preferredExportName?: NamedExports;
+    preferredExportName?: PreferredExportName;
     isImportEnabled?: boolean;
+}
+
+interface LoadFoldersOptions {
+    processMode?: ProcessMode;
+}
+
+interface ProcessFolderPathsOptions {
+    isFileConcurrent: boolean;
+    isFolderConcurrent: boolean;
 }
 
 export type {
     ExportType,
-    GetFoldersOptions,
     GetModulesOptions,
-    ProcessMode,
-    LoadFoldersOptions,
-    LoadFoldersCallback,
+    GetFoldersOptions,
     LoadModulesOptions,
     LoadModulesCallback,
+    LoadFoldersOptions,
+    LoadFoldersCallback,
     ModuleExport,
     ModuleNamespace,
+    ProcessMode,
+    ProcessFileCallback,
+    ProcessFolderPathsOptions,
     ProcessPathCallback,
 };
