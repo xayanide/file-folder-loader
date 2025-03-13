@@ -240,7 +240,7 @@ async function processFolderPaths(folderPaths: string | string[], processFile: P
         if (typeof folderPaths === "string" && folderPaths.trim() !== "") {
             folderPaths = [folderPaths];
         } else {
-            return;
+            throw new Error(`Invalid folderPaths: '${folderPaths}'. Must be a non-empty string or a string[].`);
         }
     }
     if (folderPaths.length === 0) {
@@ -256,10 +256,10 @@ async function processFolderPaths(folderPaths: string | string[], processFile: P
     const isFileConcurrent = internalOptions.isFileConcurrent;
     const isFolderConcurrent = internalOptions.isFolderConcurrent;
     if (typeof isFileConcurrent !== "boolean") {
-        throw new Error(`Invalid isFileConcurrent: ${isFileConcurrent}. Must be a boolean.`);
+        throw new Error(`Invalid isFileConcurrent: '${isFileConcurrent}'. Must be a boolean.`);
     }
     if (typeof isFolderConcurrent !== "boolean") {
-        throw new Error(`Invalid isFolderConcurrent: ${isFolderConcurrent}. Must be a boolean.`);
+        throw new Error(`Invalid isFolderConcurrent: '${isFolderConcurrent}'. Must be a boolean.`);
     }
     const isProcessFileAsync = nodeUtilTypes.isAsyncFunction(processFile);
     if (isFileConcurrent && !isProcessFileAsync) {
@@ -267,7 +267,7 @@ async function processFolderPaths(folderPaths: string | string[], processFile: P
     }
     async function processFolderPath(folderPath: string) {
         if (typeof folderPath !== "string" || folderPath.trim() === "") {
-            throw new Error(`Invalid folderPath: ${folderPath}. Must be a non-empty string.`);
+            throw new Error(`Invalid folderPath: '${folderPath}'. Must be a non-empty string.`);
         }
         const files = await nodeFsPromises.readdir(folderPath, { withFileTypes: true });
         if (files.length === 0) {
@@ -304,7 +304,7 @@ async function processFolderPaths(folderPaths: string | string[], processFile: P
     if (folderPaths.length === 1) {
         const folderPath = folderPaths[0];
         if (typeof folderPath !== "string" || folderPath.trim() === "") {
-            throw new Error(`Invalid folderPath: ${folderPath}. Must be a non-empty string.`);
+            throw new Error(`Invalid folderPath: '${folderPath}'. Must be a non-empty string.`);
         }
         await processFolderPath(folderPath);
         return;
