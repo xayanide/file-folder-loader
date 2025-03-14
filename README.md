@@ -1,5 +1,8 @@
 # file-folder-loader
-A simple (lowkey over-engineered) utility that wraps around `fsPromise.readdir` for iterating over folders and files and importing modules from those files. An abstraction over for-loops approach of loading files and folders' paths. Syntactic sugar for iterating and loading folders and files. All functions return a Promise.
+A simple (lowkey over-engineered) utility that wraps around `node:fs/promises#readdir` for reading files and folders and `await import` for importing modules from those files. If you want a simpler approach with the least overhead, just use the former two mentioned inside a standard for-loop, instead of relying on this utility.
+
+# Intro
+Instead of manually using `node:fs/promises#readdir` and `await import` together inside for-loops which most often happens with files and folders, some functions of this utility abstracts that logic away. An abstraction over for-loops approach of iterating and loading files and folders. Syntactic sugar for iterating and loading folders and files. All functions are only asynchronous and returns a Promise.
 
 ## Installation
 
