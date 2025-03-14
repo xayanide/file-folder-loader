@@ -505,6 +505,5 @@ async function loadFolderModules(folderPaths: string | string[], loadCallback: L
     await processFolderPaths(folderPaths, processFile, { isFileConcurrent: isFileConcurrent, isFolderConcurrent: isFolderConcurrent });
 }
 
-const fileFolderLoader = { getModulePaths, getFolderPaths, loadModulePaths, loadFolderPaths, loadFolderModules, processFolderPaths };
-export default fileFolderLoader;
+export default { getModulePaths, getFolderPaths, loadModulePaths, loadFolderPaths, loadFolderModules, processFolderPaths };
 export { getModulePaths, getFolderPaths, loadModulePaths, loadFolderPaths, loadFolderModules, processFolderPaths };
