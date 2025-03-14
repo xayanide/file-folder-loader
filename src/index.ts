@@ -185,7 +185,7 @@ async function getFolderPaths(
     }
     function reduceCallback(acc: string[], entry: Dirent) {
         const fullFolderPath = nodePath.join(dirPath, entry.name);
-        if (entry.isDirectory() && filterCallback && filterCallback(entry, fullFolderPath, dirPath)) {
+        if (entry.isDirectory() || (entry.isDirectory() && filterCallback && filterCallback(entry, fullFolderPath, dirPath))) {
             acc.push(fullFolderPath);
         }
         return acc;
