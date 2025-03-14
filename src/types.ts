@@ -67,6 +67,7 @@ export type {
     LoadFolderPathsCallback,
     ModuleExport,
     ModuleNamespace,
+    PreferredExportName,
     ProcessFileCallback,
     ProcessFolderPathsOptions,
     ProcessItemPathCallback,
