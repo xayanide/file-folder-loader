@@ -78,6 +78,10 @@ function handleError(message: string, error: unknown, logError = console.error) 
     logError(`${message}\nUnknown Error Type: ${typeof error}\n${String(error)}`);
 }
 
+function isModuleFileExtensionName(entry: Dirent) {
+    return MODULE_FILE_EXTENSIONS_PATTERN.test(entry.name);
+}
+
 async function readDirectory(dirPath: string) {
     try {
         return await nodeFsPromises.readdir(dirPath, { withFileTypes: true });
@@ -124,7 +128,11 @@ async function getItemPaths(
 }
 
 /** Warning: There is no concurrency limit with recursive and can be demanding with nested directories. */
-async function getModulePaths(dirPath: string, options?: GetModulePathsOptions) {
+async function getModulePaths(
+    dirPath: string,
+    options?: GetModulePathsOptions,
+    filterCallback: (entry: Dirent, fullFilePath?: string, directoryPath?: string) => boolean = isModuleFileExtensionName,
+) {
     if (options !== undefined && (options === null || typeof options !== "object" || Array.isArray(options))) {
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
     }
@@ -141,8 +149,9 @@ async function getModulePaths(dirPath: string, options?: GetModulePathsOptions) 
         throw new Error(`Invalid isConcurrent: '${isConcurrent}'. Must be a boolean.`);
     }
     function reduceCallback(acc: string[], entry: Dirent) {
-        if (entry.isFile() && MODULE_FILE_EXTENSIONS_PATTERN.test(entry.name)) {
-            acc.push(nodePath.join(dirPath, entry.name));
+        const fullFilePath = nodePath.join(dirPath, entry.name);
+        if (entry.isFile() && filterCallback(entry, fullFilePath, dirPath)) {
+            acc.push(fullFilePath);
         }
         return acc;
     }
@@ -153,7 +162,11 @@ async function getModulePaths(dirPath: string, options?: GetModulePathsOptions) 
 }
 
 /** Warning: There is no concurrency limit with recursive and can be demanding with nested directories. */
-async function getFolderPaths(dirPath: string, options?: GetFolderPathsOptions) {
+async function getFolderPaths(
+    dirPath: string,
+    options?: GetFolderPathsOptions,
+    filterCallback?: (entry: Dirent, fullFolderPath?: string, directoryPath?: string) => boolean,
+) {
     if (options !== undefined && (options === null || typeof options !== "object" || Array.isArray(options))) {
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
     }
@@ -170,8 +183,9 @@ async function getFolderPaths(dirPath: string, options?: GetFolderPathsOptions) 
         throw new Error(`Invalid isConcurrent: '${isConcurrent}'. Must be a boolean.`);
     }
     function reduceCallback(acc: string[], entry: Dirent) {
-        if (entry.isDirectory()) {
-            acc.push(nodePath.join(dirPath, entry.name));
+        const fullFolderPath = nodePath.join(dirPath, entry.name);
+        if (entry.isDirectory() && filterCallback && filterCallback(entry, fullFolderPath, dirPath)) {
+            acc.push(fullFolderPath);
         }
         return acc;
     }
