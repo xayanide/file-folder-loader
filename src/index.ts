@@ -3,16 +3,17 @@ import * as nodePath from "node:path";
 import * as nodeUrl from "node:url";
 import * as nodeUtilTypes from "node:util/types";
 import type {
-    GetFoldersOptions,
-    GetModulesOptions,
-    LoadFoldersOptions,
-    LoadFoldersCallback,
-    LoadModulesOptions,
-    LoadModulesCallback,
+    GetFolderPathsOptions,
+    GetModulePathsOptions,
+    LoadFolderPathsOptions,
+    LoadFolderPathsCallback,
+    LoadModulePathsOptions,
+    LoadModulePathsCallback,
+    LoadFolderModulesCallback,
+    LoadFolderModulesOptions,
     ModuleExport,
     ModuleNamespace,
-    ProcessMode,
-    ProcessPathCallback,
+    ProcessItemPathCallback,
     ProcessFileCallback,
     ProcessFolderPathsOptions,
 } from "./types.js";
@@ -23,34 +24,38 @@ const IMPORTABLE_MODULE_FILE_EXTENSIONS_PATTERN = /\.(m?js|cjs|mts|cts)$/;
 
 const DEFAULT_EXPORT_NAME = "default";
 
-const DEFAULT_MODULE_PROCESS_MODE = "concurrent";
-const DEFAULT_FOLDER_PROCESS_MODE = "concurrent";
-
 const DEFAULT_EXPORT_TYPE = "default";
 const DEFAULT_NAMED_EXPORT = "default";
 
-const DEFAULT_PROCESS_MODES = ["sequential", "concurrent"];
 const DEFAULT_EXPORT_TYPES = ["default", "named", "all"];
 
 const DEFAULT_GET_MODULES_OPTIONS = {
     isRecursive: false,
-    processMode: DEFAULT_MODULE_PROCESS_MODE,
+    isConcurrent: true,
 };
 
 const DEFAULT_GET_FOLDERS_OPTIONS = {
     isRecursive: false,
-    processMode: DEFAULT_FOLDER_PROCESS_MODE,
+    isConcurrent: true,
 };
 
 const DEFAULT_LOAD_MODULE_OPTIONS = {
-    processMode: DEFAULT_MODULE_PROCESS_MODE,
+    isConcurrent: true,
+    exportType: DEFAULT_EXPORT_TYPE,
+    preferredExportName: DEFAULT_NAMED_EXPORT,
+    isImportEnabled: true,
+};
+
+const DEFAULT_LOAD_FOLDER_MODULES_OPTIONS = {
+    isFileConcurrent: true,
+    isFolderConcurrent: true,
     exportType: DEFAULT_EXPORT_TYPE,
     preferredExportName: DEFAULT_NAMED_EXPORT,
     isImportEnabled: true,
 };
 
 const DEFAULT_LOAD_FOLDER_OPTIONS = {
-    processMode: DEFAULT_FOLDER_PROCESS_MODE,
+    isConcurrent: true,
 };
 
 const DEFAULT_PROCESS_FOLDER_PATHS_OPTIONS = {
@@ -82,87 +87,58 @@ async function readDirectory(dirPath: string) {
     }
 }
 
-async function getPaths(
+async function getItemPaths(
     dirPath: string,
     isRecursive: boolean,
-    processMode: string | ProcessMode,
+    isConcurrent: boolean,
     reduceCallback: (acc: string[], entry: Dirent) => string[],
     recursiveCallback: (subDirPath: string) => Promise<string[]>,
 ) {
     const entries = await readDirectory(dirPath);
-    const paths = entries.reduce<string[]>(reduceCallback, []);
+    const itemPaths = entries.reduce<string[]>(reduceCallback, []);
     if (!isRecursive) {
-        return paths;
+        return itemPaths;
     }
     const directories = entries.filter(function (entry) {
         return entry.isDirectory();
     });
     /**
-     * paths.push(...results) is possible for a mutable approach
+     * itemPaths.push(...results) is possible for a mutable approach
      * but decided not to go with it to avoid side-effects.
      */
-    if (processMode === "sequential") {
-        const results: string[] = [];
-        for (const entry of directories) {
-            const subDirPath = nodePath.join(dirPath, entry.name);
-            const subDirResults = await recursiveCallback(subDirPath);
-            results.push(...subDirResults);
-        }
-        return [...paths, ...results];
+    if (isConcurrent) {
+        const subDirResults = await Promise.all(
+            directories.map(async function (entry) {
+                return await recursiveCallback(nodePath.join(dirPath, entry.name));
+            }),
+        );
+        return [...itemPaths, ...subDirResults.flat()];
     }
-    const subDirResults = await Promise.all(
-        directories.map(async function (entry) {
-            return await recursiveCallback(nodePath.join(dirPath, entry.name));
-        }),
-    );
-    return [...paths, ...subDirResults.flat()];
+    const results: string[] = [];
+    for (const entry of directories) {
+        const subDirPath = nodePath.join(dirPath, entry.name);
+        const subDirResults = await recursiveCallback(subDirPath);
+        results.push(...subDirResults);
+    }
+    return [...itemPaths, ...results];
 }
 
-/** Warning: Recursive can be demanding with nested directories. */
-async function getFolders(dirPath: string, options?: GetFoldersOptions) {
-    if (options !== undefined && (options === null || typeof options !== "object" || Array.isArray(options))) {
-        throw new Error(`Invalid options: '${options}'. Must be a an object.`);
-    }
-    const getOptions = { ...DEFAULT_GET_FOLDERS_OPTIONS, ...(options || {}) };
-    const isRecursive = getOptions.isRecursive;
-    const processMode = getOptions.processMode;
-    if (typeof dirPath !== "string" || dirPath.trim() === "") {
-        throw new Error(`Invalid dirPath: '${dirPath}'. Must be a non-empty string.`);
-    }
-    if (typeof isRecursive !== "boolean") {
-        throw new Error(`Invalid isRecursive: '${isRecursive}'. Must be a boolean.`);
-    }
-    if (!DEFAULT_PROCESS_MODES.includes(processMode)) {
-        throw new Error(`Invalid process mode: '${processMode}'. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
-    }
-    function reduceCallback(acc: string[], entry: Dirent) {
-        if (entry.isDirectory()) {
-            acc.push(nodePath.join(dirPath, entry.name));
-        }
-        return acc;
-    }
-    async function recursiveCallback(subDirPath: string): Promise<string[]> {
-        return await getFolders(subDirPath, getOptions as GetFoldersOptions);
-    }
-    return await getPaths(dirPath, isRecursive, processMode, reduceCallback, recursiveCallback);
-}
-
-/** Warning: Recursive can be demanding with nested directories. */
-async function getModules(dirPath: string, options?: GetModulesOptions) {
+/** Warning: There is no concurrency limit with recursive and can be demanding with nested directories. */
+async function getModulePaths(dirPath: string, options?: GetModulePathsOptions) {
     if (options !== undefined && (options === null || typeof options !== "object" || Array.isArray(options))) {
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
     }
     const getOptions = { ...DEFAULT_GET_MODULES_OPTIONS, ...(options || {}) };
     const isRecursive = getOptions.isRecursive;
-    const processMode = getOptions.processMode;
+    const isConcurrent = getOptions.isConcurrent;
     if (typeof dirPath !== "string" || dirPath.trim() === "") {
         throw new Error(`Invalid dirPath: '${dirPath}'. Must be a non-empty string.`);
     }
     if (typeof isRecursive !== "boolean") {
         throw new Error(`Invalid isRecursive: '${isRecursive}'. Must be a boolean.`);
     }
-    if (!DEFAULT_PROCESS_MODES.includes(processMode)) {
-        throw new Error(`Invalid process mode: '${processMode}'. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
+    if (typeof isConcurrent !== "boolean") {
+        throw new Error(`Invalid isConcurrent: '${isConcurrent}'. Must be a boolean.`);
     }
     function reduceCallback(acc: string[], entry: Dirent) {
         if (entry.isFile() && MODULE_FILE_EXTENSIONS_PATTERN.test(entry.name)) {
@@ -171,34 +147,68 @@ async function getModules(dirPath: string, options?: GetModulesOptions) {
         return acc;
     }
     async function recursiveCallback(subDirPath: string): Promise<string[]> {
-        return await getModules(subDirPath, getOptions as GetModulesOptions);
+        return await getModulePaths(subDirPath, getOptions as GetModulePathsOptions);
     }
-    return await getPaths(dirPath, isRecursive, processMode, reduceCallback, recursiveCallback);
+    return await getItemPaths(dirPath, isRecursive, isConcurrent, reduceCallback, recursiveCallback);
 }
 
-function getAsyncAwareProcessFolderPathCallback(isProcessFolderPathAsync: boolean, processFolderPath: LoadFoldersCallback) {
+/** Warning: There is no concurrency limit with recursive and can be demanding with nested directories. */
+async function getFolderPaths(dirPath: string, options?: GetFolderPathsOptions) {
+    if (options !== undefined && (options === null || typeof options !== "object" || Array.isArray(options))) {
+        throw new Error(`Invalid options: '${options}'. Must be a an object.`);
+    }
+    const getOptions = { ...DEFAULT_GET_FOLDERS_OPTIONS, ...(options || {}) };
+    const isRecursive = getOptions.isRecursive;
+    const isConcurrent = getOptions.isConcurrent;
+    if (typeof dirPath !== "string" || dirPath.trim() === "") {
+        throw new Error(`Invalid dirPath: '${dirPath}'. Must be a non-empty string.`);
+    }
+    if (typeof isRecursive !== "boolean") {
+        throw new Error(`Invalid isRecursive: '${isRecursive}'. Must be a boolean.`);
+    }
+    if (typeof isConcurrent !== "boolean") {
+        throw new Error(`Invalid isConcurrent: '${isConcurrent}'. Must be a boolean.`);
+    }
+    function reduceCallback(acc: string[], entry: Dirent) {
+        if (entry.isDirectory()) {
+            acc.push(nodePath.join(dirPath, entry.name));
+        }
+        return acc;
+    }
+    async function recursiveCallback(subDirPath: string): Promise<string[]> {
+        return await getFolderPaths(subDirPath, getOptions as GetFolderPathsOptions);
+    }
+    return await getItemPaths(dirPath, isRecursive, isConcurrent, reduceCallback, recursiveCallback);
+}
+
+function getAsyncAwareProcessFolderPathCallback(isProcessFolderPathAsync: boolean, processFolderPath: LoadFolderPathsCallback) {
     if (isProcessFolderPathAsync) {
-        async function processPathAsync(folderPath: string) {
+        async function processItemPathAsync(folderPath: string) {
             if (typeof folderPath !== "string" || folderPath.trim() === "") {
                 throw new Error(`Invalid folder path: '${folderPath}'. Must be a non-empty string.`);
             }
             const folderName = nodePath.basename(folderPath);
             await processFolderPath(folderPath, folderName);
         }
-        return processPathAsync;
+        return processItemPathAsync;
     }
-    function processPathSync(folderPath: string) {
+    function processItemPathSync(folderPath: string) {
         if (typeof folderPath !== "string" || folderPath.trim() === "") {
             throw new Error(`Invalid folder path: '${folderPath}'. Must be a non-empty string.`);
         }
         const folderName = nodePath.basename(folderPath);
         processFolderPath(folderPath, folderName);
     }
-    return processPathSync;
+    return processItemPathSync;
 }
 
 async function importModule(fileUrlHref: string, exportType: string, preferredExportName: string) {
     const isNamedExportType = exportType === "named";
+    /**
+     * There is no need to check if moduleNamespace
+     * is undefined or null because it'll always return an empty object
+     * if there's nothing to export.
+     */
     const moduleNamespace: ModuleNamespace = await import(fileUrlHref);
     if (exportType === "all") {
         const moduleExports: ModuleExport[] = [];
@@ -318,7 +328,7 @@ async function processFolderPaths(folderPaths: string | string[], processFile: P
     }
 }
 
-async function processPaths(paths: string[], processMode: string, loadCallback: ProcessPathCallback, isLoadCallbackAsync: boolean) {
+async function processItemPaths(paths: string[], isConcurrent: boolean, processItemPathCallback: ProcessItemPathCallback, isLoadCallbackAsync: boolean) {
     if (paths.length === 0) {
         return;
     }
@@ -328,26 +338,26 @@ async function processPaths(paths: string[], processMode: string, loadCallback: 
             return;
         }
         if (isLoadCallbackAsync) {
-            await loadCallback(path);
+            await processItemPathCallback(path);
             return;
         }
-        loadCallback(path);
+        processItemPathCallback(path);
         return;
     }
-    if (processMode === "concurrent") {
-        await Promise.all(paths.map(loadCallback));
+    if (isConcurrent) {
+        await Promise.all(paths.map(processItemPathCallback));
         return;
     }
     for (const path of paths) {
         if (isLoadCallbackAsync) {
-            await loadCallback(path);
+            await processItemPathCallback(path);
             continue;
         }
-        loadCallback(path);
+        processItemPathCallback(path);
     }
 }
 
-async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallback, options?: LoadModulesOptions) {
+async function loadModulePaths(modulePaths: string[], loadCallback: LoadModulePathsCallback, options?: LoadModulePathsOptions) {
     if (!Array.isArray(modulePaths)) {
         throw new Error(`Invalid paths: '${modulePaths}'. Must be an array.`);
     }
@@ -358,12 +368,12 @@ async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallb
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
     }
     const loadOptions = { ...DEFAULT_LOAD_MODULE_OPTIONS, ...(options || {}) };
-    const processMode = loadOptions.processMode;
+    const isConcurrent = loadOptions.isConcurrent;
     const exportType = loadOptions.exportType;
     const preferredExportName = loadOptions.preferredExportName;
     const isImportEnabled = loadOptions.isImportEnabled;
-    if (!DEFAULT_PROCESS_MODES.includes(processMode)) {
-        throw new Error(`Invalid process mode: '${processMode}'. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
+    if (typeof isConcurrent !== "boolean") {
+        throw new Error(`Invalid isConcurrent: '${isConcurrent}'. Must be a boolean.`);
     }
     if (!DEFAULT_EXPORT_TYPES.includes(exportType)) {
         throw new Error(`Invalid exportType: '${exportType}'. Must be one of string: ${DEFAULT_EXPORT_TYPES.join(", ")}`);
@@ -375,10 +385,10 @@ async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallb
         throw new Error(`Invalid isImportEnabled: '${isImportEnabled}'. Must be a boolean.`);
     }
     const isLoadCallbackAsync = nodeUtilTypes.isAsyncFunction(loadCallback);
-    if (processMode === "concurrent" && !isLoadCallbackAsync) {
-        throw new Error("Invalid load callback. Process mode: 'concurrent' requires an async callback.");
+    if (isConcurrent && !isLoadCallbackAsync) {
+        throw new Error("Invalid load callback. isConcurrent: 'true' requires an async callback.");
     }
-    async function processPath(filePath: string) {
+    async function processItemPath(filePath: string) {
         if (typeof filePath !== "string" || filePath.trim() === "") {
             throw new Error(`Invalid module path: '${filePath}'. Must be a non-empty string.`);
         }
@@ -404,10 +414,10 @@ async function loadModules(modulePaths: string[], loadCallback: LoadModulesCallb
             loadCallback(moduleExport, fileUrlHref, fileName);
         }
     }
-    return await processPaths(modulePaths, processMode, processPath, isLoadCallbackAsync);
+    return await processItemPaths(modulePaths, isConcurrent, processItemPath, isLoadCallbackAsync);
 }
 
-async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallback, options?: LoadFoldersOptions) {
+async function loadFolderPaths(folderPaths: string[], loadCallback: LoadFolderPathsCallback, options?: LoadFolderPathsOptions) {
     if (!Array.isArray(folderPaths)) {
         throw new Error(`Invalid paths: '${folderPaths}'. Must be an array.`);
     }
@@ -418,17 +428,76 @@ async function loadFolders(folderPaths: string[], loadCallback: LoadFoldersCallb
         throw new Error(`Invalid options: '${options}'. Must be a an object.`);
     }
     const loadOptions = { ...DEFAULT_LOAD_FOLDER_OPTIONS, ...(options || {}) };
-    const processMode = loadOptions.processMode;
-    if (!DEFAULT_PROCESS_MODES.includes(processMode)) {
-        throw new Error(`Invalid process mode: '${processMode}'. Must be one of string: ${DEFAULT_PROCESS_MODES.join(", ")}`);
+    const isConcurrent = loadOptions.isConcurrent;
+    if (typeof isConcurrent !== "boolean") {
+        throw new Error(`Invalid isConcurrent: '${isConcurrent}'. Must be a boolean.`);
     }
     const isLoadCallbackAsync = nodeUtilTypes.isAsyncFunction(loadCallback);
-    if (processMode === "concurrent" && !isLoadCallbackAsync) {
-        throw new Error("Invalid processFolderPath callback. Process mode: 'concurrent' requires an async callback.");
+    if (isConcurrent && !isLoadCallbackAsync) {
+        throw new Error("Invalid load callback. isConcurrent: 'true' requires an async callback.");
     }
-    return await processPaths(folderPaths, processMode, getAsyncAwareProcessFolderPathCallback(isLoadCallbackAsync, loadCallback), isLoadCallbackAsync);
+    return await processItemPaths(folderPaths, isConcurrent, getAsyncAwareProcessFolderPathCallback(isLoadCallbackAsync, loadCallback), isLoadCallbackAsync);
 }
 
-const fileFolderLoader = { getModules, getFolders, loadModules, loadFolders, processFolderPaths };
+async function loadFolderModules(folderPaths: string | string[], loadCallback: LoadFolderModulesCallback, options?: LoadFolderModulesOptions) {
+    if (typeof loadCallback !== "function") {
+        throw new Error(`Invalid load callback: '${loadCallback}'. Must be a function.`);
+    }
+    if (options !== undefined && (options === null || typeof options !== "object" || Array.isArray(options))) {
+        throw new Error(`Invalid options: '${options}'. Must be a an object.`);
+    }
+    const loadOptions = { ...DEFAULT_LOAD_FOLDER_MODULES_OPTIONS, ...(options || {}) };
+    const isFileConcurrent = loadOptions.isFileConcurrent;
+    const isFolderConcurrent = loadOptions.isFolderConcurrent;
+    const exportType = loadOptions.exportType;
+    const preferredExportName = loadOptions.preferredExportName;
+    const isImportEnabled = loadOptions.isImportEnabled;
+    if (typeof isFileConcurrent !== "boolean") {
+        throw new Error(`Invalid isFolderConcurrent: '${isFolderConcurrent}'. Must be a boolean.`);
+    }
+    if (typeof isFolderConcurrent !== "boolean") {
+        throw new Error(`Invalid isFolderConcurrent: '${isFolderConcurrent}'. Must be a boolean.`);
+    }
+    if (!DEFAULT_EXPORT_TYPES.includes(exportType)) {
+        throw new Error(`Invalid exportType: '${exportType}'. Must be one of string: ${DEFAULT_EXPORT_TYPES.join(", ")}`);
+    }
+    if (typeof preferredExportName !== "string" || preferredExportName.trim() === "") {
+        throw new Error(`Invalid preferred export name: '${preferredExportName}'. Must be a non-empty string.`);
+    }
+    if (typeof isImportEnabled !== "boolean") {
+        throw new Error(`Invalid isImportEnabled: '${isImportEnabled}'. Must be a boolean.`);
+    }
+    const isLoadCallbackAsync = nodeUtilTypes.isAsyncFunction(loadCallback);
+    if (isFileConcurrent && !isLoadCallbackAsync) {
+        throw new Error("Invalid load callback. isFileConcurrent: 'true' requires an async callback.");
+    }
+    async function processFile(file: Dirent, folderPath: string) {
+        const fileName = file.name;
+        const filePath = nodePath.join(folderPath, fileName);
+        const fileUrlHref = nodeUrl.pathToFileURL(filePath).href;
+        if (!isImportEnabled && isLoadCallbackAsync) {
+            await loadCallback(null, fileUrlHref, fileName, folderPath, file);
+            return;
+        }
+        if (!isImportEnabled && !isLoadCallbackAsync) {
+            loadCallback(null, fileUrlHref, fileName, folderPath, file);
+            return;
+        }
+        if (!IMPORTABLE_MODULE_FILE_EXTENSIONS_PATTERN.test(fileName)) {
+            return;
+        }
+        const moduleExports = await importModule(fileUrlHref, exportType, preferredExportName);
+        for (const moduleExport of moduleExports) {
+            if (isLoadCallbackAsync) {
+                await loadCallback(moduleExport, fileUrlHref, fileName, folderPath, file);
+                continue;
+            }
+            loadCallback(moduleExport, fileUrlHref, fileName, folderPath, file);
+        }
+    }
+    await processFolderPaths(folderPaths, processFile, { isFileConcurrent: isFileConcurrent, isFolderConcurrent: isFolderConcurrent });
+}
+
+const fileFolderLoader = { getModulePaths, getFolderPaths, loadModulePaths, loadFolderPaths, loadFolderModules, processFolderPaths };
 export default fileFolderLoader;
-export { getModules, getFolders, loadModules, loadFolders, processFolderPaths };
+export { getModulePaths, getFolderPaths, loadModulePaths, loadFolderPaths, loadFolderModules, processFolderPaths };

@@ -7,58 +7,67 @@ interface ModuleNamespace {
     [key: string]: ModuleExport | undefined;
 }
 
+type LoadFolderPathsCallback = (folderName: string, folderPath: string) => void | Promise<void>;
+
+type LoadModulePathsCallback = (moduleExport: ModuleExport, fileUrlHref: string, fileName: string) => void | Promise<void>;
+
+type LoadFolderModulesCallback = (moduleExport: ModuleExport, fileUrlHref: string, fileName: string, folderPath: string, file: Dirent) => void | Promise<void>;
+
+type ProcessItemPathCallback = (itemPath: string) => void | Promise<void>;
+
 type ProcessFileCallback = (file: Dirent, folderPath: string) => void | Promise<void>;
-
-type ProcessPathCallback = (itemPath: string) => void | Promise<void>;
-
-type LoadFoldersCallback = (folderName: string, folderPath: string) => void | Promise<void>;
-
-type LoadModulesCallback = (moduleExport: ModuleExport, moduleFileUrlHref: string, moduleFileName: string) => void | Promise<void>;
-
-type ProcessMode = "sequential" | "concurrent";
 
 type ExportType = "default" | "named" | "all";
 
 type PreferredExportName = string | "default" | "*";
 
-interface GetModulesOptions {
+interface GetModulePathsOptions {
     isRecursive?: boolean;
-    processMode?: ProcessMode;
+    isConcurrent?: boolean;
 }
 
-interface GetFoldersOptions {
+interface GetFolderPathsOptions {
     isRecursive?: boolean;
-    processMode?: ProcessMode;
+    isConcurrent?: boolean;
 }
 
-interface LoadModulesOptions {
-    processMode?: ProcessMode;
+interface LoadModulePathsOptions {
+    isConcurrent?: boolean;
     exportType?: ExportType;
     preferredExportName?: PreferredExportName;
     isImportEnabled?: boolean;
 }
 
-interface LoadFoldersOptions {
-    processMode?: ProcessMode;
+interface LoadFolderPathsOptions {
+    isConcurrent?: boolean;
+}
+
+interface LoadFolderModulesOptions {
+    isFileConcurrent?: boolean;
+    isFolderConcurrent?: boolean;
+    exportType?: ExportType;
+    preferredExportName?: PreferredExportName;
+    isImportEnabled?: boolean;
 }
 
 interface ProcessFolderPathsOptions {
-    isFileConcurrent: boolean;
-    isFolderConcurrent: boolean;
+    isFileConcurrent?: boolean;
+    isFolderConcurrent?: boolean;
 }
 
 export type {
     ExportType,
-    GetModulesOptions,
-    GetFoldersOptions,
-    LoadModulesOptions,
-    LoadModulesCallback,
-    LoadFoldersOptions,
-    LoadFoldersCallback,
+    GetModulePathsOptions,
+    GetFolderPathsOptions,
+    LoadModulePathsOptions,
+    LoadFolderModulesOptions,
+    LoadModulePathsCallback,
+    LoadFolderModulesCallback,
+    LoadFolderPathsOptions,
+    LoadFolderPathsCallback,
     ModuleExport,
     ModuleNamespace,
-    ProcessMode,
     ProcessFileCallback,
     ProcessFolderPathsOptions,
-    ProcessPathCallback,
+    ProcessItemPathCallback,
 };

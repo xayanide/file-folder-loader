@@ -1,5 +1,5 @@
 # file-folder-loader
-A simple utility for iterating over folders and files and importing modules from those files. An abstraction over for-loops approach of loading files and folders. Syntactic sugar for iterating and loading folders and files.
+A simple (lowkey over-engineered) utility that wraps around `fsPromise.readdir` for iterating over folders and files and importing modules from those files. An abstraction over for-loops approach of loading files and folders' paths. Syntactic sugar for iterating and loading folders and files. All functions return a Promise.
 
 ## Installation
 
@@ -9,12 +9,12 @@ npm install file-folder-loader
 
 ## Usage & Examples
 
-### Example 1: Loading Folders
+### Example 1: Loading Folder Paths
 
 ```typescript
 import * as nodeUrl from "node:url";
 import * as nodePath from "node:path";
-import { getFolders, loadFolders } from "file-folder-loader";
+import { getFolderPaths, loadFolderPaths } from "file-folder-loader";
 
 function getDirname(moduleAbsoluteFileUrl) {
     const fileName = nodeUrl.fileURLToPath(moduleAbsoluteFileUrl);
@@ -23,9 +23,9 @@ function getDirname(moduleAbsoluteFileUrl) {
 
 async function init() {
     const dirPath = nodePath.join(getDirname(import.meta.url), "someDirectory");
-    const folderPaths = await getFolders(dirPath);
+    const folderPaths = await getFolderPaths(dirPath);
     if (folderPaths.length > 0) {
-        await loadFolders(folderPaths, async (folderPath, folderName) => {
+        await loadFolderPaths(folderPaths, async (folderPath, folderName) => {
             console.log(`Loaded folder ${folderName} from path: ${folderPath}`);
         });
     }
@@ -34,12 +34,12 @@ async function init() {
 await init();
 ```
 
-### Example 2: Loading Modules
+### Example 2: Loading Module Paths
 
 ```typescript
 import * as nodeUrl from "node:url";
 import * as nodePath from "node:path";
-import { getModules, loadModules } from "file-folder-loader";
+import { getModulePaths, loadModulePaths } from "file-folder-loader";
 
 function getDirname(moduleAbsoluteFileUrl) {
     const fileName = nodeUrl.fileURLToPath(moduleAbsoluteFileUrl);
@@ -48,10 +48,10 @@ function getDirname(moduleAbsoluteFileUrl) {
 
 async function init() {
     const dirPath = nodePath.join(getDirname(import.meta.url), "someDirectory");
-    const modulePaths = await getModules(dirPath);
+    const modulePaths = await getModulePaths(dirPath);
     if (modulePaths.length > 0) {
-        await loadModules(modulePaths, async (moduleExport, moduleFileUrlHref, moduleFileName) => {
-            console.log(`Loaded module ${moduleFileName} from path: ${moduleFileUrlHref}`);
+        await loadModulePaths(modulePaths, async (moduleExport, fileUrlHref, fileName) => {
+            console.log(`Loaded module ${fileName} from path: ${fileUrlHref}`);
             console.log(`Module export:`, moduleExport);
         });
     }
@@ -60,12 +60,12 @@ async function init() {
 await init();
 ```
 
-### Example 3: Loading Folders Sequentially and Loading Modules Concurrently
+### Example 3: Loading Folder Paths Sequentially and Loading Module Paths Concurrently
 
 ```typescript
 import * as nodeUrl from "node:url";
 import * as nodePath from "node:path";
-import { getFolders, getModules, loadFolders, loadModules } from "file-folder-loader";
+import { getFolderPaths, getModulePaths, loadFolders, loadModulePaths } from "file-folder-loader";
 
 function getDirname(moduleAbsoluteFileUrl) {
     const fileName = nodeUrl.fileURLToPath(moduleAbsoluteFileUrl);
@@ -74,21 +74,21 @@ function getDirname(moduleAbsoluteFileUrl) {
 
 async function init() {
     const dirPath = nodePath.join(getDirname(import.meta.url), "someDirectory");
-    // Recursive = false by default
-    const folderPaths = await getFolders(dirPath);
+    // getFolderPaths option isRecursive = false by default
+    const folderPaths = await getFolderPaths(dirPath);
     if (folderPaths.length > 0) {
         await loadFolders(folderPaths, async (folderPath, folderName) => {
             console.log(`Loaded folder ${folderName} from path: ${folderPath}`);
-            // Recursive = false by default
-            const modulePaths = await getModules(folderPath, false);
+            // getFolderPaths option isRecursive = false by default
+            const modulePaths = await getModulePaths(folderPath, false);
             if (modulePaths.length > 0) {
-                await loadModules(modulePaths, async (moduleExport, moduleFileUrlHref, moduleFileName) => {
-                    console.log(`Loaded module ${moduleFileName} from path: ${moduleFileUrlHref}`);
+                await loadModulePaths(modulePaths, async (moduleExport, fileUrlHref, fileName) => {
+                    console.log(`Loaded module ${fileName} from path: ${fileUrlHref}`);
                     // moduleExport will be null because isImportEnabled is false (true by default)
                     console.log(`Module export:`, moduleExport);
                 }, { isImportEnabled: false });
             }
-        }, { processMode: "sequential" });
+        }, { isConcurrent: true });
     }
 }
 
