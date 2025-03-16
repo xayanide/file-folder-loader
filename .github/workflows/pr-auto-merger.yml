@@ -33,7 +33,7 @@ jobs:
       - name: Enable auto-merge if PR is ready
         uses: reitermarkus/automerge@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.SRGH_TOKEN }}
           merge-method: squash
           squash-commit-title: ${pull_request.title} (#${pull_request.number})
           do-not-merge-labels: question,invalid,help wanted,wontfix
