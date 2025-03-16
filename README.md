@@ -12,6 +12,9 @@ npm install file-folder-loader
 
 ## Usage & Examples
 
+> [!WARNING]
+> By default, `isImportEnabled` is `true` when using `loadModulePaths()`. The module blindly imports modules unsandboxed. Only import modules from places you know. Modules that self-invoke code as soon as they're imported can have dangerous side-effects.
+
 ### Example 1: Loading Folder Paths
 
 ```typescript
@@ -63,12 +66,12 @@ async function init() {
 await init();
 ```
 
-### Example 3: Loading Folder Paths Sequentially and Loading Module Paths Concurrently
+### Example 3: Loading Folder Paths Sequentially and Loading Module Paths Concurrently (All recursive)
 
 ```typescript
 import * as nodeUrl from "node:url";
 import * as nodePath from "node:path";
-import { getFolderPaths, getModulePaths, loadFolders, loadModulePaths } from "file-folder-loader";
+import { getFolderPaths, getModulePaths, loadFolderPaths, loadModulePaths } from "file-folder-loader";
 
 function getDirname(moduleAbsoluteFileUrl) {
     const fileName = nodeUrl.fileURLToPath(moduleAbsoluteFileUrl);
@@ -78,12 +81,12 @@ function getDirname(moduleAbsoluteFileUrl) {
 async function init() {
     const dirPath = nodePath.join(getDirname(import.meta.url), "someDirectory");
     // getFolderPaths option isRecursive = false by default
-    const folderPaths = await getFolderPaths(dirPath);
+    const folderPaths = await getFolderPaths(dirPath, { isRecursive: true });
     if (folderPaths.length > 0) {
-        await loadFolders(folderPaths, async (folderPath, folderName) => {
+        await loadFolderPaths(folderPaths, async (folderPath, folderName) => {
             console.log(`Loaded folder ${folderName} from path: ${folderPath}`);
-            // getFolderPaths option isRecursive = false by default
-            const modulePaths = await getModulePaths(folderPath, false);
+            // getModulePaths option isRecursive = false by default
+            const modulePaths = await getModulePaths(folderPath, { isRecursive: true });
             if (modulePaths.length > 0) {
                 await loadModulePaths(modulePaths, async (moduleExport, fileUrlHref, fileName) => {
                     console.log(`Loaded module ${fileName} from path: ${fileUrlHref}`);
@@ -91,7 +94,7 @@ async function init() {
                     console.log(`Module export:`, moduleExport);
                 }, { isImportEnabled: false });
             }
-        }, { isConcurrent: true });
+        }, { isConcurrent: false });
     }
 }
 
