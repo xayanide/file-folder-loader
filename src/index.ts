@@ -383,8 +383,8 @@ async function loadModulePaths(modulePaths: string[], loadCallback: LoadModulePa
     }
     const userOptions = getMergedOptions(options, DEFAULT_LOAD_MODULE_PATHS_OPTIONS);
     const isConcurrent = userOptions.isConcurrent;
-    const exportType = userOptions.exportType as string;
-    const preferredExportName = userOptions.preferredExportName as string;
+    const exportType = userOptions.exportType;
+    const preferredExportName = userOptions.preferredExportName;
     const isImportEnabled = userOptions.isImportEnabled;
     if (typeof isConcurrent !== "boolean") {
         throw new Error(`Invalid isConcurrent: '${isConcurrent}'. Must be a boolean.`);
@@ -457,8 +457,8 @@ async function loadFolderModules(folderPaths: string | string[], loadCallback: L
     const userOptions = getMergedOptions(options, DEFAULT_LOAD_FOLDER_MODULES_OPTIONS);
     const isFileConcurrent = userOptions.isFileConcurrent;
     const isFolderConcurrent = userOptions.isFolderConcurrent;
-    const exportType = userOptions.exportType as string;
-    const preferredExportName = userOptions.preferredExportName as string;
+    const exportType = userOptions.exportType;
+    const preferredExportName = userOptions.preferredExportName;
     const isImportEnabled = userOptions.isImportEnabled;
     if (typeof isFileConcurrent !== "boolean") {
         throw new Error(`Invalid isFolderConcurrent: '${isFolderConcurrent}'. Must be a boolean.`);
