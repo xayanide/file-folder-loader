@@ -82,7 +82,7 @@ function isModuleFileExtensionName(entry: Dirent) {
     return MODULE_FILE_EXTENSIONS_PATTERN.test(entry.name);
 }
 
-function getMergedOptions(userOptions: object | undefined, defaultOptions: object) {
+function getMergedOptions<T>(userOptions: Partial<T> | undefined, defaultOptions: T): T {
     if (userOptions !== undefined && (userOptions === null || typeof userOptions !== "object" || Array.isArray(userOptions))) {
         throw new Error(`Invalid options: '${userOptions}'. Must be a an object.`);
     }
@@ -140,7 +140,7 @@ async function getModulePaths(
     options?: GetModulePathsOptions,
     filterCallback: (entry: Dirent, fullFilePath?: string, directoryPath?: string) => boolean = isModuleFileExtensionName,
 ) {
-    const userOptions = getMergedOptions(options, DEFAULT_GET_MODULES_PATHS_OPTIONS) as GetModulePathsOptions;
+    const userOptions = getMergedOptions(options, DEFAULT_GET_MODULES_PATHS_OPTIONS);
     const isRecursive = userOptions.isRecursive;
     const isConcurrent = userOptions.isConcurrent;
     if (typeof dirPath !== "string" || dirPath.trim() === "") {
@@ -171,7 +171,7 @@ async function getFolderPaths(
     options?: GetFolderPathsOptions,
     filterCallback?: (entry: Dirent, fullFolderPath?: string, directoryPath?: string) => boolean,
 ) {
-    const userOptions = getMergedOptions(options, DEFAULT_GET_FOLDERS_PATHS_OPTIONS) as GetFolderPathsOptions;
+    const userOptions = getMergedOptions(options, DEFAULT_GET_FOLDERS_PATHS_OPTIONS);
     const isRecursive = userOptions.isRecursive;
     const isConcurrent = userOptions.isConcurrent;
     if (typeof dirPath !== "string" || dirPath.trim() === "") {
@@ -185,7 +185,8 @@ async function getFolderPaths(
     }
     function reduceCallback(acc: string[], entry: Dirent) {
         const fullFolderPath = nodePath.join(dirPath, entry.name);
-        if (entry.isDirectory() || (entry.isDirectory() && filterCallback && filterCallback(entry, fullFolderPath, dirPath))) {
+        const isDirectory = entry.isDirectory();
+        if (isDirectory || (isDirectory && filterCallback && filterCallback(entry, fullFolderPath, dirPath))) {
             acc.push(fullFolderPath);
         }
         return acc;
@@ -278,7 +279,7 @@ async function processFolderPaths(folderPaths: string | string[], processFile: P
     if (typeof processFile !== "function") {
         throw new Error("Invalid processFile callback. Must be a function.");
     }
-    const userOptions = getMergedOptions(options, DEFAULT_PROCESS_FOLDER_PATHS_OPTIONS) as ProcessFolderPathsOptions;
+    const userOptions = getMergedOptions(options, DEFAULT_PROCESS_FOLDER_PATHS_OPTIONS);
     const isFileConcurrent = userOptions.isFileConcurrent;
     const isFolderConcurrent = userOptions.isFolderConcurrent;
     if (typeof isFileConcurrent !== "boolean") {
@@ -380,7 +381,7 @@ async function loadModulePaths(modulePaths: string[], loadCallback: LoadModulePa
     if (typeof loadCallback !== "function") {
         throw new Error(`Invalid load callback: '${loadCallback}'. Must be a function.`);
     }
-    const userOptions = getMergedOptions(options, DEFAULT_LOAD_MODULE_PATHS_OPTIONS) as LoadModulePathsOptions;
+    const userOptions = getMergedOptions(options, DEFAULT_LOAD_MODULE_PATHS_OPTIONS);
     const isConcurrent = userOptions.isConcurrent;
     const exportType = userOptions.exportType as string;
     const preferredExportName = userOptions.preferredExportName as string;
@@ -437,7 +438,7 @@ async function loadFolderPaths(folderPaths: string[], loadCallback: LoadFolderPa
     if (typeof loadCallback !== "function") {
         throw new Error(`Invalid load callback: '${loadCallback}'. Must be a function.`);
     }
-    const userOptions = getMergedOptions(options, DEFAULT_LOAD_FOLDER_PATHS_OPTIONS) as LoadFolderPathsOptions;
+    const userOptions = getMergedOptions(options, DEFAULT_LOAD_FOLDER_PATHS_OPTIONS);
     const isConcurrent = userOptions.isConcurrent;
     if (typeof isConcurrent !== "boolean") {
         throw new Error(`Invalid isConcurrent: '${isConcurrent}'. Must be a boolean.`);
@@ -453,7 +454,7 @@ async function loadFolderModules(folderPaths: string | string[], loadCallback: L
     if (typeof loadCallback !== "function") {
         throw new Error(`Invalid load callback: '${loadCallback}'. Must be a function.`);
     }
-    const userOptions = getMergedOptions(options, DEFAULT_LOAD_FOLDER_MODULES_OPTIONS) as LoadFolderModulesOptions;
+    const userOptions = getMergedOptions(options, DEFAULT_LOAD_FOLDER_MODULES_OPTIONS);
     const isFileConcurrent = userOptions.isFileConcurrent;
     const isFolderConcurrent = userOptions.isFolderConcurrent;
     const exportType = userOptions.exportType as string;

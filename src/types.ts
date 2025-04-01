@@ -7,7 +7,7 @@ interface ModuleNamespace {
     [key: string]: ModuleExport | undefined;
 }
 
-type LoadFolderPathsCallback = (folderName: string, folderPath: string) => void | Promise<void>;
+type LoadFolderPathsCallback = (folderPath: string, folderName: string) => void | Promise<void>;
 
 type LoadModulePathsCallback = (moduleExport: ModuleExport, fileUrlHref: string, fileName: string) => void | Promise<void>;
 
