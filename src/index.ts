@@ -273,7 +273,8 @@ async function processFolderPaths(folderPaths: string | string[], processFile: P
             throw new Error(`Invalid folderPaths: '${folderPaths}'. Must be a non-empty string or a string[].`);
         }
     }
-    if (folderPaths.length === 0) {
+    const folderPathsCount = folderPaths.length;
+    if (folderPathsCount === 0) {
         return;
     }
     if (typeof processFile !== "function") {
@@ -297,10 +298,11 @@ async function processFolderPaths(folderPaths: string | string[], processFile: P
             throw new Error(`Invalid folderPath: '${folderPath}'. Must be a non-empty string.`);
         }
         const files = await nodeFsPromises.readdir(folderPath, { withFileTypes: true });
-        if (files.length === 0) {
+        const filesCount = files.length;
+        if (filesCount === 0) {
             return;
         }
-        if (files.length === 1) {
+        if (filesCount === 1) {
             const file = files[0];
             if (!file) {
                 return;
@@ -328,7 +330,7 @@ async function processFolderPaths(folderPaths: string | string[], processFile: P
             processFile(file, folderPath);
         }
     }
-    if (folderPaths.length === 1) {
+    if (folderPathsCount === 1) {
         const folderPath = folderPaths[0];
         if (typeof folderPath !== "string" || folderPath.trim() === "") {
             throw new Error(`Invalid folderPath: '${folderPath}'. Must be a non-empty string.`);
@@ -346,10 +348,11 @@ async function processFolderPaths(folderPaths: string | string[], processFile: P
 }
 
 async function processItemPaths(paths: string[], isConcurrent: boolean, processItemPathCallback: ProcessItemPathCallback, isLoadCallbackAsync: boolean) {
-    if (paths.length === 0) {
+    const pathsCount = paths.length;
+    if (pathsCount === 0) {
         return;
     }
-    if (paths.length === 1) {
+    if (pathsCount === 1) {
         const path = paths[0];
         if (!path) {
             return;
