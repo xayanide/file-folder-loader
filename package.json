@@ -78,7 +78,7 @@
     "cross-env": "^7.0.3",
     "eslint": "^9.23.0",
     "eslint-config-prettier": "^10.0.2",
-    "eslint-plugin-erasable-syntax-only": "^0.3.0",
+    "eslint-plugin-erasable-syntax-only": "^0.3.1",
     "globals": "^16.0.0",
     "prettier": "3.5.3",
     "rimraf": "^6.0.1",
