@@ -77,7 +77,7 @@
     "@types/node": "^22.15.30",
     "cross-env": "^7.0.3",
     "eslint": "^9.31.0",
-    "eslint-config-prettier": "^10.1.7",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-erasable-syntax-only": "^0.3.1",
     "globals": "^16.3.0",
     "prettier": "3.6.2",
