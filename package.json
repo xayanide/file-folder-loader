@@ -76,7 +76,7 @@
     "@tsconfig/strictest": "^2.0.6",
     "@types/node": "^22.15.30",
     "cross-env": "^7.0.3",
-    "eslint": "^9.36.0",
+    "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-erasable-syntax-only": "^0.3.1",
     "globals": "^16.4.0",
