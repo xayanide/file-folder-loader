@@ -21,7 +21,7 @@ jobs:
       issues: write
       # to be able to comment on released pull requests
       pull-requests: write
-      # to enable use of OIDC for npm provenance
+      # to enable use of OIDC for npm provenance 
       id-token: write
     steps:
       - name: Checkout repository
