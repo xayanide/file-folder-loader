@@ -22,37 +22,37 @@ type ExportType = "default" | "named" | "all";
 type PreferredExportName = string | "default" | "*";
 
 interface GetModulePathsOptions {
-    isRecursive?: boolean;
-    isConcurrent?: boolean;
+    recursive?: boolean;
+    concurrent?: boolean;
 }
 
 interface GetFolderPathsOptions {
-    isRecursive?: boolean;
-    isConcurrent?: boolean;
+    recursive?: boolean;
+    concurrent?: boolean;
 }
 
 interface LoadModulePathsOptions {
-    isConcurrent?: boolean;
+    concurrent?: boolean;
     exportType?: ExportType;
     preferredExportName?: PreferredExportName;
-    isImportEnabled?: boolean;
+    shouldImport?: boolean;
 }
 
 interface LoadFolderPathsOptions {
-    isConcurrent?: boolean;
+    concurrent?: boolean;
 }
 
 interface LoadFolderModulesOptions {
-    isFileConcurrent?: boolean;
-    isFolderConcurrent?: boolean;
+    fileConcurrent?: boolean;
+    folderConcurrent?: boolean;
     exportType?: ExportType;
     preferredExportName?: PreferredExportName;
-    isImportEnabled?: boolean;
+    shouldImport?: boolean;
 }
 
 interface ProcessFolderPathsOptions {
-    isFileConcurrent?: boolean;
-    isFolderConcurrent?: boolean;
+    fileConcurrent?: boolean;
+    folderConcurrent?: boolean;
 }
 
 export type {

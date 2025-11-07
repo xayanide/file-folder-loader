@@ -30,37 +30,37 @@ const DEFAULT_PREFERRED_EXPORT_NAME = "default";
 const DEFAULT_EXPORT_TYPES = ["default", "named", "all"];
 
 const DEFAULT_GET_MODULES_PATHS_OPTIONS = {
-    isRecursive: false,
-    isConcurrent: true,
+    recursive: false,
+    concurrent: true,
 };
 
 const DEFAULT_GET_FOLDERS_PATHS_OPTIONS = {
-    isRecursive: false,
-    isConcurrent: true,
+    recursive: false,
+    concurrent: true,
 };
 
 const DEFAULT_LOAD_MODULE_PATHS_OPTIONS = {
-    isConcurrent: true,
+    concurrent: true,
     exportType: DEFAULT_EXPORT_TYPE,
     preferredExportName: DEFAULT_PREFERRED_EXPORT_NAME,
-    isImportEnabled: true,
+    shouldImport: true,
 };
 
 const DEFAULT_LOAD_FOLDER_MODULES_OPTIONS = {
-    isFileConcurrent: true,
-    isFolderConcurrent: true,
+    fileConcurrent: true,
+    folderConcurrent: true,
     exportType: DEFAULT_EXPORT_TYPE,
     preferredExportName: DEFAULT_PREFERRED_EXPORT_NAME,
-    isImportEnabled: true,
+    shouldImport: true,
 };
 
 const DEFAULT_LOAD_FOLDER_PATHS_OPTIONS = {
-    isConcurrent: true,
+    concurrent: true,
 };
 
 const DEFAULT_PROCESS_FOLDER_PATHS_OPTIONS = {
-    isFileConcurrent: false,
-    isFolderConcurrent: false,
+    fileConcurrent: false,
+    folderConcurrent: false,
 };
 
 /**
@@ -141,16 +141,16 @@ async function getModulePaths(
     filterCallback: (entry: Dirent, fullFilePath?: string, directoryPath?: string) => boolean = isModuleFileExtensionName,
 ) {
     const userOptions = getMergedOptions(options, DEFAULT_GET_MODULES_PATHS_OPTIONS);
-    const isRecursive = userOptions.isRecursive;
-    const isConcurrent = userOptions.isConcurrent;
+    const isRecursive = userOptions.recursive;
+    const isConcurrent = userOptions.concurrent;
     if (typeof dirPath !== "string" || dirPath.trim() === "") {
         throw new Error(`Invalid dirPath: '${dirPath}'. Must be a non-empty string.`);
     }
     if (typeof isRecursive !== "boolean") {
-        throw new Error(`Invalid isRecursive: '${isRecursive}'. Must be a boolean.`);
+        throw new Error(`Invalid recursive: '${isRecursive}'. Must be a boolean.`);
     }
     if (typeof isConcurrent !== "boolean") {
-        throw new Error(`Invalid isConcurrent: '${isConcurrent}'. Must be a boolean.`);
+        throw new Error(`Invalid concurrent: '${isConcurrent}'. Must be a boolean.`);
     }
     function reduceCallback(acc: string[], entry: Dirent) {
         const fullFilePath = nodePath.join(dirPath, entry.name);
@@ -172,16 +172,16 @@ async function getFolderPaths(
     filterCallback?: (entry: Dirent, fullFolderPath?: string, directoryPath?: string) => boolean,
 ) {
     const userOptions = getMergedOptions(options, DEFAULT_GET_FOLDERS_PATHS_OPTIONS);
-    const isRecursive = userOptions.isRecursive;
-    const isConcurrent = userOptions.isConcurrent;
+    const isRecursive = userOptions.recursive;
+    const isConcurrent = userOptions.concurrent;
     if (typeof dirPath !== "string" || dirPath.trim() === "") {
         throw new Error(`Invalid dirPath: '${dirPath}'. Must be a non-empty string.`);
     }
     if (typeof isRecursive !== "boolean") {
-        throw new Error(`Invalid isRecursive: '${isRecursive}'. Must be a boolean.`);
+        throw new Error(`Invalid recursive: '${isRecursive}'. Must be a boolean.`);
     }
     if (typeof isConcurrent !== "boolean") {
-        throw new Error(`Invalid isConcurrent: '${isConcurrent}'. Must be a boolean.`);
+        throw new Error(`Invalid concurrent: '${isConcurrent}'. Must be a boolean.`);
     }
     function reduceCallback(acc: string[], entry: Dirent) {
         const fullFolderPath = nodePath.join(dirPath, entry.name);
@@ -281,17 +281,17 @@ async function processFolderPaths(folderPaths: string | string[], processFile: P
         throw new Error("Invalid processFile callback. Must be a function.");
     }
     const userOptions = getMergedOptions(options, DEFAULT_PROCESS_FOLDER_PATHS_OPTIONS);
-    const isFileConcurrent = userOptions.isFileConcurrent;
-    const isFolderConcurrent = userOptions.isFolderConcurrent;
+    const isFileConcurrent = userOptions.fileConcurrent;
+    const isFolderConcurrent = userOptions.folderConcurrent;
     if (typeof isFileConcurrent !== "boolean") {
-        throw new Error(`Invalid isFileConcurrent: '${isFileConcurrent}'. Must be a boolean.`);
+        throw new Error(`Invalid fileConcurrent: '${isFileConcurrent}'. Must be a boolean.`);
     }
     if (typeof isFolderConcurrent !== "boolean") {
-        throw new Error(`Invalid isFolderConcurrent: '${isFolderConcurrent}'. Must be a boolean.`);
+        throw new Error(`Invalid folderConcurrent: '${isFolderConcurrent}'. Must be a boolean.`);
     }
     const isProcessFileAsync = nodeUtilTypes.isAsyncFunction(processFile);
     if (isFileConcurrent && !isProcessFileAsync) {
-        throw new Error("Invalid processFile callback. isFileConcurrent: true requires an async callback");
+        throw new Error("Invalid processFile callback. fileConcurrent: true requires an async callback");
     }
     async function processFolderPath(folderPath: string) {
         if (typeof folderPath !== "string" || folderPath.trim() === "") {
@@ -385,12 +385,12 @@ async function loadModulePaths(modulePaths: string[], loadCallback: LoadModulePa
         throw new Error(`Invalid load callback: '${loadCallback}'. Must be a function.`);
     }
     const userOptions = getMergedOptions(options, DEFAULT_LOAD_MODULE_PATHS_OPTIONS);
-    const isConcurrent = userOptions.isConcurrent;
+    const isConcurrent = userOptions.concurrent;
     const exportType = userOptions.exportType;
     const preferredExportName = userOptions.preferredExportName;
-    const isImportEnabled = userOptions.isImportEnabled;
+    const shouldImport = userOptions.shouldImport;
     if (typeof isConcurrent !== "boolean") {
-        throw new Error(`Invalid isConcurrent: '${isConcurrent}'. Must be a boolean.`);
+        throw new Error(`Invalid concurrent: '${isConcurrent}'. Must be a boolean.`);
     }
     if (!DEFAULT_EXPORT_TYPES.includes(exportType)) {
         throw new Error(`Invalid exportType: '${exportType}'. Must be one of string: ${DEFAULT_EXPORT_TYPES.join(", ")}`);
@@ -398,12 +398,12 @@ async function loadModulePaths(modulePaths: string[], loadCallback: LoadModulePa
     if (typeof preferredExportName !== "string" || preferredExportName.trim() === "") {
         throw new Error(`Invalid preferred export name: '${preferredExportName}'. Must be a non-empty string.`);
     }
-    if (typeof isImportEnabled !== "boolean") {
-        throw new Error(`Invalid isImportEnabled: '${isImportEnabled}'. Must be a boolean.`);
+    if (typeof shouldImport !== "boolean") {
+        throw new Error(`Invalid shouldImport: '${shouldImport}'. Must be a boolean.`);
     }
     const isLoadCallbackAsync = nodeUtilTypes.isAsyncFunction(loadCallback);
     if (isConcurrent && !isLoadCallbackAsync) {
-        throw new Error("Invalid load callback. isConcurrent: 'true' requires an async callback.");
+        throw new Error("Invalid load callback. concurrent: 'true' requires an async callback.");
     }
     async function processItemPath(filePath: string) {
         if (typeof filePath !== "string" || filePath.trim() === "") {
@@ -411,11 +411,11 @@ async function loadModulePaths(modulePaths: string[], loadCallback: LoadModulePa
         }
         const fileUrlHref = nodeUrl.pathToFileURL(filePath).href;
         const fileName = nodePath.basename(fileUrlHref);
-        if (!isImportEnabled && isLoadCallbackAsync) {
+        if (!shouldImport && isLoadCallbackAsync) {
             await loadCallback(null, fileUrlHref, fileName);
             return;
         }
-        if (!isImportEnabled && !isLoadCallbackAsync) {
+        if (!shouldImport && !isLoadCallbackAsync) {
             loadCallback(null, fileUrlHref, fileName);
             return;
         }
@@ -442,13 +442,13 @@ async function loadFolderPaths(folderPaths: string[], loadCallback: LoadFolderPa
         throw new Error(`Invalid load callback: '${loadCallback}'. Must be a function.`);
     }
     const userOptions = getMergedOptions(options, DEFAULT_LOAD_FOLDER_PATHS_OPTIONS);
-    const isConcurrent = userOptions.isConcurrent;
+    const isConcurrent = userOptions.concurrent;
     if (typeof isConcurrent !== "boolean") {
-        throw new Error(`Invalid isConcurrent: '${isConcurrent}'. Must be a boolean.`);
+        throw new Error(`Invalid concurrent: '${isConcurrent}'. Must be a boolean.`);
     }
     const isLoadCallbackAsync = nodeUtilTypes.isAsyncFunction(loadCallback);
     if (isConcurrent && !isLoadCallbackAsync) {
-        throw new Error("Invalid load callback. isConcurrent: 'true' requires an async callback.");
+        throw new Error("Invalid load callback. concurrent: 'true' requires an async callback.");
     }
     return await processItemPaths(folderPaths, isConcurrent, getAsyncAwareProcessFolderPathCallback(isLoadCallbackAsync, loadCallback), isLoadCallbackAsync);
 }
@@ -458,16 +458,16 @@ async function loadFolderModules(folderPaths: string | string[], loadCallback: L
         throw new Error(`Invalid load callback: '${loadCallback}'. Must be a function.`);
     }
     const userOptions = getMergedOptions(options, DEFAULT_LOAD_FOLDER_MODULES_OPTIONS);
-    const isFileConcurrent = userOptions.isFileConcurrent;
-    const isFolderConcurrent = userOptions.isFolderConcurrent;
+    const isFileConcurrent = userOptions.fileConcurrent;
+    const isFolderConcurrent = userOptions.folderConcurrent;
     const exportType = userOptions.exportType;
     const preferredExportName = userOptions.preferredExportName;
-    const isImportEnabled = userOptions.isImportEnabled;
+    const shouldImport = userOptions.shouldImport;
     if (typeof isFileConcurrent !== "boolean") {
-        throw new Error(`Invalid isFolderConcurrent: '${isFolderConcurrent}'. Must be a boolean.`);
+        throw new Error(`Invalid folderConcurrent: '${isFolderConcurrent}'. Must be a boolean.`);
     }
     if (typeof isFolderConcurrent !== "boolean") {
-        throw new Error(`Invalid isFolderConcurrent: '${isFolderConcurrent}'. Must be a boolean.`);
+        throw new Error(`Invalid folderConcurrent: '${isFolderConcurrent}'. Must be a boolean.`);
     }
     if (!DEFAULT_EXPORT_TYPES.includes(exportType)) {
         throw new Error(`Invalid exportType: '${exportType}'. Must be one of string: ${DEFAULT_EXPORT_TYPES.join(", ")}`);
@@ -475,22 +475,22 @@ async function loadFolderModules(folderPaths: string | string[], loadCallback: L
     if (typeof preferredExportName !== "string" || preferredExportName.trim() === "") {
         throw new Error(`Invalid preferred export name: '${preferredExportName}'. Must be a non-empty string.`);
     }
-    if (typeof isImportEnabled !== "boolean") {
-        throw new Error(`Invalid isImportEnabled: '${isImportEnabled}'. Must be a boolean.`);
+    if (typeof shouldImport !== "boolean") {
+        throw new Error(`Invalid shouldImport: '${shouldImport}'. Must be a boolean.`);
     }
     const isLoadCallbackAsync = nodeUtilTypes.isAsyncFunction(loadCallback);
     if (isFileConcurrent && !isLoadCallbackAsync) {
-        throw new Error("Invalid load callback. isFileConcurrent: 'true' requires an async callback.");
+        throw new Error("Invalid load callback. fileConcurrent: 'true' requires an async callback.");
     }
     async function processFile(file: Dirent, folderPath: string) {
         const fileName = file.name;
         const filePath = nodePath.join(folderPath, fileName);
         const fileUrlHref = nodeUrl.pathToFileURL(filePath).href;
-        if (!isImportEnabled && isLoadCallbackAsync) {
+        if (!shouldImport && isLoadCallbackAsync) {
             await loadCallback(null, fileUrlHref, fileName, folderPath, file);
             return;
         }
-        if (!isImportEnabled && !isLoadCallbackAsync) {
+        if (!shouldImport && !isLoadCallbackAsync) {
             loadCallback(null, fileUrlHref, fileName, folderPath, file);
             return;
         }
@@ -506,7 +506,7 @@ async function loadFolderModules(folderPaths: string | string[], loadCallback: L
             loadCallback(moduleExport, fileUrlHref, fileName, folderPath, file);
         }
     }
-    await processFolderPaths(folderPaths, processFile, { isFileConcurrent: isFileConcurrent, isFolderConcurrent: isFolderConcurrent });
+    await processFolderPaths(folderPaths, processFile, { fileConcurrent: isFileConcurrent, folderConcurrent: isFolderConcurrent });
 }
 
 export default { getModulePaths, getFolderPaths, loadModulePaths, loadFolderPaths, loadFolderModules, processFolderPaths };
