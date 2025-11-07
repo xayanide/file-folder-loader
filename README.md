@@ -13,7 +13,7 @@ npm install file-folder-loader
 ## Usage & Examples
 
 > [!WARNING]
-> By default, `isImportEnabled` is `true` when using `loadModulePaths()`. The module blindly imports modules unsandboxed. Only import modules from places you know. Modules that self-invoke code as soon as they're imported can have dangerous side-effects.
+> By default, `shouldImport` is `true` when using `loadModulePaths()`. The module blindly imports modules unsandboxed. Only import modules from places you know. Modules that self-invoke code as soon as they're imported can have dangerous side-effects.
 
 ### Example 1: Loading Folder Paths
 
@@ -80,21 +80,21 @@ function getDirname(moduleAbsoluteFileUrl) {
 
 async function init() {
     const dirPath = nodePath.join(getDirname(import.meta.url), "someDirectory");
-    // getFolderPaths option isRecursive = false by default
-    const folderPaths = await getFolderPaths(dirPath, { isRecursive: true });
+    // getFolderPaths option recursive = false by default
+    const folderPaths = await getFolderPaths(dirPath, { recursive: true });
     if (folderPaths.length > 0) {
         await loadFolderPaths(folderPaths, async (folderPath, folderName) => {
             console.log(`Loaded folder ${folderName} from path: ${folderPath}`);
-            // getModulePaths option isRecursive = false by default
-            const modulePaths = await getModulePaths(folderPath, { isRecursive: true });
+            // getModulePaths option recursive = false by default
+            const modulePaths = await getModulePaths(folderPath, { recursive: true });
             if (modulePaths.length > 0) {
                 await loadModulePaths(modulePaths, async (moduleExport, fileUrlHref, fileName) => {
                     console.log(`Loaded module ${fileName} from path: ${fileUrlHref}`);
-                    // moduleExport will be null because isImportEnabled is false (true by default)
+                    // moduleExport will be null because shouldImport is false (true by default)
                     console.log(`Module export:`, moduleExport);
-                }, { isImportEnabled: false });
+                }, { shouldImport: false });
             }
-        }, { isConcurrent: false });
+        }, { concurrent: false });
     }
 }
 
