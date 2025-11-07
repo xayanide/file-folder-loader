@@ -84,7 +84,7 @@ function isModuleFileExtensionName(entry: Dirent) {
 
 function getMergedOptions<T>(userOptions: Partial<T> | undefined, defaultOptions: T): T {
     if (userOptions !== undefined && (userOptions === null || typeof userOptions !== "object" || Array.isArray(userOptions))) {
-        throw new Error(`Invalid options: '${userOptions}'. Must be an object.`);
+        throw new Error(`Invalid options: '${String(userOptions)}'. Must be an object.`);
     }
     return { ...defaultOptions, ...(userOptions || {}) };
 }
