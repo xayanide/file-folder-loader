@@ -78,7 +78,7 @@ function handleError(message: string, error: unknown, logError = console.error) 
     logError(`${message}\nUnknown Error Type: ${typeof error}\n${String(error)}`);
 }
 
-function isModuleFileExtensionName(entry: Dirent) {
+function isModuleFile(entry: Dirent) {
     return MODULE_FILE_EXTENSIONS_PATTERN.test(entry.name);
 }
 
@@ -138,7 +138,7 @@ async function getItemPaths(
 async function getModulePaths(
     dirPath: string,
     options?: GetModulePathsOptions,
-    filterCallback: (entry: Dirent, fullFilePath?: string, directoryPath?: string) => boolean = isModuleFileExtensionName,
+    filterCallback: (entry: Dirent, fullFilePath?: string, directoryPath?: string) => boolean = isModuleFile,
 ) {
     const userOptions = getMergedOptions(options, DEFAULT_GET_MODULES_PATHS_OPTIONS);
     const isRecursive = userOptions.recursive;
