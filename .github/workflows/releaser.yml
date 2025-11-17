@@ -43,5 +43,5 @@ jobs:
         run: npm audit signatures
       - name: Bump version and release if needed
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.SRGH_TOKEN }}
         run: npx semantic-release
